@@ -1,8 +1,8 @@
 import React, { useContext } from 'react';
 import './index.css'
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import Home from './components/Home';
-import Login from './components/Login/Login';
+import Home from './pages/Home';
+import Login from './pages/Login';
 import { AuthContext } from './context/AuthContext';
 import AdminRoutes from './components/AdminRoutes'; 
 
