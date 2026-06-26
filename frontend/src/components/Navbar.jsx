@@ -1,5 +1,6 @@
 import React from 'react';
 import logoStore from '../assets/logof.png';
+import { Link } from 'react-router-dom';
 
 const SearchIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -14,7 +15,21 @@ const CartIcon = () => (
 );
 
 const Navbar = ({ onSignOut, user }) => {
-  const navLinks = ["Inicio", "Componentes", "Armar PC", "Ofertas", "Soporte"];
+  const clientNavLinks = [
+    { name: "Inicio", path: "/" },
+    { name: "Componentes", path: "/componentes" },
+    { name: "Armar PC", path: "/armar-pc" },
+    { name: "Ofertas", path: "/ofertas" },
+    { name: "Soporte", path: "/soporte" },
+  ];
+
+  const adminNavLinks = [
+    { name: "Dashboard", path: "/admin" },
+    { name: "Inventario", path: "/admin/inventario" },
+    { name: "Garantías (RMA)", path: "/admin/rma" },
+  ];
+
+  const navLinks = user?.role === 'admin' ? adminNavLinks : clientNavLinks;
 
   return (
     <header className="fixed top-4 left-0 right-0 z-50 font-['Montserrat'] mx-auto max-w-[1200px] w-[calc(100%-2rem)] px-4">
@@ -28,22 +43,22 @@ const Navbar = ({ onSignOut, user }) => {
         <div className="flex items-center justify-between h-16 md:h-20">
           
           <div className="w-32 md:w-40 flex items-center justify-start flex-shrink-0">
-            <a href="/" title="FIRSTPC Home" className="block">
+            <Link to="/" title="FIRSTPC Home" className="block">
               <img 
                 src={logoStore} 
                 alt="FIRSTPC Logo" 
                 className="h-10 md:h-12 w-auto object-contain max-w-full block" 
               />
-            </a>
+            </Link>
           </div>
 
           <nav className="hidden md:flex">
             <ul className="flex items-center space-x-6 lg:space-x-8">
-              {navLinks.map((link) => (
-                <li key={link}>
-                  <a href="#" className="text-sm font-semibold text-slate-700 hover:text-[#10B981] transition-colors duration-200 whitespace-nowrap">
-                    {link}
-                  </a>
+              {navLinks.map((link, index) => (
+                <li key={index}>
+                  <Link to={link.path} className="text-sm font-semibold text-slate-700 hover:text-[#10B981] transition-colors duration-200 whitespace-nowrap">
+                    {link.name}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -65,12 +80,12 @@ const Navbar = ({ onSignOut, user }) => {
                 Cerrar Sesión
               </button>
             ) : (
-              <a 
-                href="/login" 
+              <Link 
+                to="/login" 
                 className="hidden sm:inline-block bg-[#10B981] text-white font-bold text-sm px-6 py-2.5 rounded-full hover:bg-emerald-600 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shadow-[0_4px_14px_rgba(16,185,129,0.25)] whitespace-nowrap"
               >
                 Iniciar Sesión
-              </a>
+              </Link>
             )}
           </div>
 

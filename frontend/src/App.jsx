@@ -1,15 +1,15 @@
 import React, { useContext } from 'react';
 import './index.css'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Home from './components/Home';
 import Login from './components/Login/Login';
 import { AuthContext } from './context/AuthContext';
+import AdminRoutes from './components/AdminRoutes'; 
 
 
 function App() {
   const { user, loading } = useContext(AuthContext);
 
-  // Mostramos un mensaje de carga mientras Firebase comprueba la sesión
   if (loading) {
     return <div>Cargando...</div>;
   }
@@ -21,10 +21,17 @@ function App() {
           path="/login"
           element={user ? <Navigate to="/" /> : <Login />}
         />
+
         <Route
           path="/"
           element={user ? <Home /> : <Navigate to="/login" />}
         />
+
+        <Route element={<AdminRoutes />}>
+
+        </Route>
+
+        <Route path="*" element={<Navigate to={user ? "/" : "/login"} />} />
       </Routes>
     </Router>
   );
