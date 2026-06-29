@@ -1,11 +1,10 @@
 import React, { useContext } from 'react';
 import './index.css'
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import { AuthContext } from './context/AuthContext';
 import AdminRoutes from './components/AdminRoutes'; 
-
 
 function App() {
   const { user, loading } = useContext(AuthContext);
@@ -24,14 +23,13 @@ function App() {
 
         <Route
           path="/"
-          element={user ? <Home /> : <Navigate to="/login" />}
+          element={<Home />}
         />
 
         <Route element={<AdminRoutes />}>
-
         </Route>
 
-        <Route path="*" element={<Navigate to={user ? "/" : "/login"} />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );
