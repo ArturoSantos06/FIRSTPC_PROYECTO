@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { signOut } from "firebase/auth";
 import { auth } from "/src/firebaseConfig.js"; 
 import { AuthContext } from '../context/AuthContext';
+import UserProfileMenu from './UserProfileMenu';
 
 const SearchIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -87,12 +88,7 @@ const Navbar = () => {
             </button>
 
             {user ? (
-              <button 
-                onClick={handleSignOut}
-                className="hidden sm:inline-block bg-[#64748B] hover:bg-slate-700 text-white font-bold text-sm px-5 py-2.5 rounded-full hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shadow-sm whitespace-nowrap"
-              >
-                Cerrar Sesión
-              </button>
+              <UserProfileMenu user={user} onSignOut={handleSignOut} />
             ) : (
               <Link 
                 to="/login" 

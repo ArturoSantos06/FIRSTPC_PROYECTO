@@ -15,7 +15,6 @@ const Home = () => {
       <FirstPurchaseBanner />
       <Features />
       <Footer />
-      
     </main>
   );
 };

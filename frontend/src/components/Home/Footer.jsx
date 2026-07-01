@@ -6,10 +6,8 @@ const Footer = () => {
     <footer className="bg-slate-50 border-t border-slate-100 font-['Montserrat'] pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         
-        {/* REJILLA PRINCIPAL DE ENLACES */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-12 border-b border-slate-200/60">
           
-          {/* Columna 1: Conócenos */}
           <div className="flex flex-col space-y-3">
             <h4 className="text-sm font-black text-slate-800 tracking-wider uppercase">Conócenos</h4>
             <Link to="/quienes-somos" className="text-sm font-medium text-slate-500 hover:text-[#10B981] transition-colors">Quiénes somos</Link>
@@ -17,7 +15,6 @@ const Footer = () => {
             <Link to="/formas-envio" className="text-sm font-medium text-slate-500 hover:text-[#10B981] transition-colors">Formas de envío</Link>
           </div>
 
-          {/* Columna 2: Accesos rápidos */}
           <div className="flex flex-col space-y-3">
             <h4 className="text-sm font-black text-slate-800 tracking-wider uppercase">Accesos Rápidos</h4>
             <Link to="/pedidos" className="text-sm font-medium text-slate-500 hover:text-[#10B981] transition-colors">Historial de pedidos</Link>
@@ -25,7 +22,6 @@ const Footer = () => {
             <Link to="/marcas" className="text-sm font-medium text-slate-500 hover:text-[#10B981] transition-colors">Todas las marcas</Link>
           </div>
 
-          {/* Columna 3: Ayuda */}
           <div className="flex flex-col space-y-3">
             <h4 className="text-sm font-black text-slate-800 tracking-wider uppercase">¿Necesitas ayuda?</h4>
             <Link to="/como-comprar" className="text-sm font-medium text-slate-500 hover:text-[#10B981] transition-colors">¿Cómo comprar?</Link>
@@ -34,7 +30,6 @@ const Footer = () => {
             <Link to="/soporte" className="text-sm font-medium text-slate-500 hover:text-[#10B981] transition-colors">Centro de información</Link>
           </div>
 
-          {/* Columna 4: Contacto */}
           <div className="flex flex-col space-y-3">
             <h4 className="text-sm font-black text-slate-800 tracking-wider uppercase">Contacto</h4>
             <p className="text-sm font-bold text-slate-700">Campeche: <span className="font-medium text-slate-500">981 185 2169</span></p>
@@ -44,10 +39,8 @@ const Footer = () => {
 
         </div>
 
-        {/* PASARELAS DE PAGO Y LOGÍSTICA */}
         <div className="py-10 flex flex-col lg:flex-row items-center justify-between gap-8 border-b border-slate-200/60">
           
-          {/* Métodos de Pago */}
           <div className="flex flex-col items-center lg:items-start space-y-3">
             <span className="text-xs font-bold text-slate-400 tracking-widest uppercase">Pagos 100% Seguros</span>
             <div className="flex flex-wrap items-center justify-center gap-4 bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-[0_4px_15px_rgba(0,0,0,0.01)]">
@@ -64,7 +57,6 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Logística de Envíos */}
           <div className="flex flex-col items-center lg:items-end space-y-3">
             <span className="text-xs font-bold text-slate-400 tracking-widest uppercase">Logística de Envío</span>
             <div className="flex items-center justify-center gap-5 bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-[0_4px_15px_rgba(0,0,0,0.01)]">
@@ -79,7 +71,6 @@ const Footer = () => {
 
         </div>
 
-        {/* PIE DE PÁGINA FINAL */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-400">
           <div className="flex flex-wrap justify-center gap-4">
             <Link to="/terminos" className="hover:text-slate-600 transition-colors">Términos y condiciones de uso</Link>
