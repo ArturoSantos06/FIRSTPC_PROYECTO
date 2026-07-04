@@ -39,7 +39,7 @@ const Navbar = () => {
   ];
 
   const adminNavLinks = [
-    { name: "Dashboard", path: "/admin" },
+    { name: "Catalogo", path: "/admin" },
     { name: "Inventario", path: "/admin/inventario" },
     { name: "Garantías (RMA)", path: "/admin/rma" },
   ];
