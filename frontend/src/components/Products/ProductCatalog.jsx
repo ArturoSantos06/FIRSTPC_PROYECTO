@@ -1,33 +1,32 @@
-import React, { useState, useEffect, useMemo, useContext } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "/src/firebaseConfig.js";
 import ProductCard from "./ProductCard";
 import AddProductModal from "./AddProductModal";
 import { AuthContext } from "../../context/AuthContext";
-
-const CATEGORIES = [
-  { id: "procesadores", label: "Procesadores", icon: "🧠" },
-  { id: "graficas", label: "Tarjetas de Video", icon: "🎮" },
-  { id: "tarjetas madre", label: "Tarjetas Madre", icon: "🔌" },
-  { id: "gabinetes", label: "Gabinetes", icon: "🖥️" },
-  { id: "enfriamiento", label: "Enfriamiento", icon: "❄️" },
-  { id: "ram", label: "Memorias RAM", icon: "⚡" },
-  { id: "almacenamiento", label: "Almacenamiento", icon: "💾" },
-  { id: "fuentes", label: "Fuentes de Poder", icon: "🔋" },
-  { id: "monitores", label: "Monitores", icon: "📺" },
-  { id: "computadora", label: "Computadora", icon: "📦" },
-  { id: "perifericos", label: "Teclados y Mouses", icon: "🖱️" },
-  { id: "audio", label: "Audífonos Gaming", icon: "🎧" },
-];
+import ProductCatalogHeader from "./CatalogHeader";
+import ProductCatalogSidebar from "./SideBar/ProductCatalogSidebar";
+import ProductCatalogEmptyState from "./EmptyState";
+import {
+  CATEGORIES,
+  TRENDING_BRANDS,
+  normalizeText,
+  parsePrice,
+} from "./SideBar/SideBarData";
 
 const ProductCatalog = () => {
   const { user } = useContext(AuthContext);
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 99999]);
+  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [sortOrder, setSortOrder] = useState("featured");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -38,137 +37,164 @@ const ProductCatalog = () => {
           id: doc.id,
           ...doc.data(),
         }));
+
         setProducts(productsData);
       } catch (error) {
         console.error("Error cargando componentes:", error);
       }
     };
+
     fetchProducts();
   }, [refreshTrigger]);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch = 
-        product.name?.toLowerCase().includes(search.toLowerCase()) || 
-        product.brand?.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
-      const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
+  const availableBrands = useMemo(() => {
+    const brandCounts = products.reduce((accumulator, product) => {
+      const brand = product.brand?.trim();
 
-      return matchesSearch && matchesCategory && matchesPrice;
+      if (!brand) {
+        return accumulator;
+      }
+
+      const normalizedBrand = brand.toUpperCase();
+      accumulator.set(normalizedBrand, {
+        label: brand,
+        count: (accumulator.get(normalizedBrand)?.count || 0) + 1,
+      });
+      return accumulator;
+    }, new Map());
+
+    const prioritized = TRENDING_BRANDS.filter((brand) => brandCounts.has(brand.toUpperCase())).map((brand) => ({
+      value: brand.toUpperCase(),
+      label: brand,
+      count: brandCounts.get(brand.toUpperCase())?.count || 0,
+    }));
+
+    const remaining = [...brandCounts.entries()]
+      .filter(([brand]) => !TRENDING_BRANDS.some((trendingBrand) => trendingBrand.toUpperCase() === brand))
+      .map(([value, metadata]) => ({ value, ...metadata }))
+      .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
+
+    return [...prioritized, ...remaining].slice(0, 10);
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    const minValue = priceMin === "" ? 0 : Number(priceMin);
+    const maxValue = priceMax === "" ? Number.POSITIVE_INFINITY : Number(priceMax);
+    const normalizedSearch = search.trim().toLowerCase();
+    const activeBrands = new Set(selectedBrands.map((brand) => brand.toUpperCase()));
+
+    const filtered = products.filter((product) => {
+      const productName = normalizeText(product.name);
+      const productBrand = normalizeText(product.brand);
+      const productCategory = normalizeText(product.category);
+      const productDescription = normalizeText(product.description);
+      const productPrice = parsePrice(product.price);
+
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        productName.includes(normalizedSearch) ||
+        productBrand.includes(normalizedSearch) ||
+        productCategory.includes(normalizedSearch) ||
+        productDescription.includes(normalizedSearch);
+
+      const matchesCategory = selectedCategory ? productCategory === selectedCategory : true;
+      const matchesBrands = activeBrands.size > 0 ? activeBrands.has(product.brand?.trim().toUpperCase()) : true;
+      const matchesPrice = productPrice >= minValue && productPrice <= maxValue;
+
+      return matchesSearch && matchesCategory && matchesBrands && matchesPrice;
     });
-  }, [products, search, selectedCategory, priceRange]);
+
+    if (sortOrder === "price-asc") {
+      return [...filtered].sort((left, right) => parsePrice(left.price) - parsePrice(right.price));
+    }
+
+    if (sortOrder === "price-desc") {
+      return [...filtered].sort((left, right) => parsePrice(right.price) - parsePrice(left.price));
+    }
+
+    return filtered;
+  }, [products, search, selectedCategory, selectedBrands, priceMin, priceMax, sortOrder]);
 
   const resetFilters = () => {
     setSearch("");
     setSelectedCategory("");
-    setPriceRange([0, 99999]);
+    setSelectedBrands([]);
+    setSortOrder("featured");
+    setPriceMin("");
+    setPriceMax("");
+  };
+
+  const toggleBrand = (brand) => {
+    setSelectedBrands((currentBrands) =>
+      currentBrands.includes(brand) ? currentBrands.filter((currentBrand) => currentBrand !== brand) : [...currentBrands, brand]
+    );
   };
 
   return (
-    <section className="relative w-full max-w-7xl mx-auto px-6 md:px-10 py-6 font-['Montserrat'] bg-transparent">
-      
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight">Catálogo de Hardware</h1>
-          <p className="text-sm font-medium text-slate-400">Gestiona y explora todos los componentes de la plataforma</p>
-        </div>
-        
-        {user?.role === 'admin' && (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="self-start sm:self-center bg-slate-900 hover:bg-[#10B981] text-white text-xs font-bold uppercase tracking-widest px-6 py-3.5 rounded-full transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.05)] hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2 cursor-pointer"
-          >
-            <span className="text-sm font-semibold">+</span> Añadir Componente
-          </button>
-        )}
-      </div>
+    <section className="relative w-full bg-[linear-gradient(180deg,rgba(248,250,252,0.65),rgba(255,255,255,0.94))] px-4 py-6 font-['Montserrat'] md:px-6 lg:px-10">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+        <ProductCatalogHeader
+          resultsCount={filteredProducts.length}
+          isAdmin={user?.role === "admin"}
+          onOpenAddProduct={() => setIsModalOpen(true)}
+          onOpenFilters={() => setIsSidebarOpen(true)}
+          onResetFilters={resetFilters}
+        />
 
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-8 bg-white p-5 rounded-[28px] border border-slate-100 shadow-[0_10px_30px_rgba(100,116,139,0.01)]">
-        <div className="relative w-full md:flex-1">
-          <span className="absolute left-4 top-3.5 text-slate-400 text-sm">🔍</span>
-          <input
-            type="text"
-            placeholder="Buscar componentes, marcas (AMD, Intel, ASUS)..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200/60 rounded-2xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#10B981] focus:bg-white transition-all"
+        <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
+          <ProductCatalogSidebar
+            categories={CATEGORIES}
+            availableBrands={availableBrands}
+            search={search}
+            onSearchChange={setSearch}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            selectedBrands={selectedBrands}
+            onToggleBrand={toggleBrand}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
+            priceMin={priceMin}
+            onPriceMinChange={setPriceMin}
+            priceMax={priceMax}
+            onPriceMaxChange={setPriceMax}
+            onResetFilters={resetFilters}
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            isCollapsed={isSidebarCollapsed}
+            onToggleCollapsed={() => setIsSidebarCollapsed((currentValue) => !currentValue)}
           />
+
+          <main className="min-w-0">
+            <div className="mb-4 flex items-center justify-between rounded-[24px] border border-slate-200/70 bg-white/80 px-4 py-3 shadow-[0_16px_40px_rgba(15,23,42,0.04)] lg:hidden">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">Resultados</p>
+                <p className="mt-1 text-sm font-semibold text-slate-700">{filteredProducts.length} componentes</p>
+              </div>
+
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="rounded-full border border-slate-200 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500"
+              >
+                Limpiar
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)
+              ) : (
+                <ProductCatalogEmptyState onResetFilters={resetFilters} />
+              )}
+            </div>
+          </main>
         </div>
-
-        <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/60 p-1.5 rounded-2xl w-full md:w-auto justify-between">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-3">Precio MXN:</span>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              placeholder="Min"
-              value={priceRange[0]}
-              onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-              className="w-20 text-center bg-white border border-slate-200 py-1.5 text-xs font-bold text-slate-700 rounded-xl focus:outline-none focus:border-[#10B981]"
-            />
-            <span className="text-slate-400 font-bold">-</span>
-            <input
-              type="number"
-              placeholder="Max"
-              value={priceRange[1]}
-              onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-              className="w-24 text-center bg-white border border-slate-200 py-1.5 text-xs font-bold text-slate-700 rounded-xl focus:outline-none focus:border-[#10B981]"
-            />
-          </div>
-        </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-4 mb-8 scrollbar-none snap-x">
-        <button
-          onClick={() => setSelectedCategory("")}
-          className={`px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all snap-start cursor-pointer ${
-            selectedCategory === ""
-              ? "bg-[#10B981] text-white shadow-[0_8px_20px_rgba(16,185,129,0.25)]"
-              : "bg-white text-slate-600 border border-slate-100 hover:border-slate-300 shadow-[0_5px_15px_rgba(0,0,0,0.01)]"
-          }`}
-        >
-          🚀 Todo el Hardware
-        </button>
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setSelectedCategory(cat.id)}
-            className={`px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap flex items-center gap-2 transition-all snap-start cursor-pointer ${
-              selectedCategory === cat.id
-                ? "bg-[#10B981] text-white shadow-[0_8px_20px_rgba(16,185,129,0.25)]"
-                : "bg-white text-slate-600 border border-slate-100 hover:border-slate-300 shadow-[0_5px_15px_rgba(0,0,0,0.01)]"
-            }`}
-          >
-            <span>{cat.icon}</span> {cat.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-        {filteredProducts.length > 0 ? (
-          filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))
-        ) : (
-          <div className="col-span-full text-center py-16 bg-white border border-slate-100 rounded-[32px] p-8">
-            <span className="text-4xl">📦</span>
-            <h4 className="text-xl font-black text-slate-800 mt-3">No encontramos ese componente</h4>
-            <p className="text-sm font-medium text-slate-400 mt-1 max-w-sm mx-auto">
-              Intenta reduciendo el rango de precio o seleccionando otra clasificación de hardware.
-            </p>
-            <button
-              onClick={resetFilters}
-              className="mt-6 px-6 py-3 bg-slate-900 hover:bg-[#10B981] text-white font-bold text-xs uppercase tracking-widest rounded-full transition-all cursor-pointer"
-            >
-              Restablecer Criterios
-            </button>
-          </div>
-        )}
-      </div>
-
-      <AddProductModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onProductAdded={() => setRefreshTrigger(prev => prev + 1)}
+      <AddProductModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onProductAdded={() => setRefreshTrigger((previousValue) => previousValue + 1)}
       />
     </section>
   );
