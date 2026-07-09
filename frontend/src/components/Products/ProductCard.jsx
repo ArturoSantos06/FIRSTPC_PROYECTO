@@ -1,10 +1,21 @@
 import React from "react";
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, isAdmin, onEditProduct }) => {
   return (
     <div className="group relative overflow-hidden bg-white p-5 rounded-[32px] border border-slate-100 shadow-[0_10px_30px_rgba(100,116,139,0.02)] flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(16,185,129,0.05)] hover:border-[#10B981]/20">
       
       <div className="absolute -top-10 -right-10 h-24 w-24 bg-[#A7F3D0]/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 z-0" />
+
+      {isAdmin && (
+        <button
+          type="button"
+          onClick={() => onEditProduct(product)}
+          className="absolute right-4 top-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-white/95 text-[14px] font-black text-slate-500 shadow-[0_12px_26px_rgba(15,23,42,0.1)] transition hover:-translate-y-0.5 hover:border-[#10B981]/30 hover:text-[#10B981] hover:shadow-[0_16px_30px_rgba(16,185,129,0.16)]"
+          aria-label={`Editar ${product.name}`}
+        >
+          ✎
+        </button>
+      )}
 
       <div className="relative z-10">
         <div className="w-full aspect-square bg-slate-50 overflow-hidden rounded-[24px] mb-4 border border-slate-50">

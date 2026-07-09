@@ -1,5 +1,3 @@
-/* eslint-disable react/prop-types */
-
 const ProductCatalogSidebarBudget = ({ priceMin, onPriceMinChange, priceMax, onPriceMaxChange }) => {
   return (
     <div className="rounded-[24px] border border-slate-200/70 bg-slate-50/70 p-4 shadow-[0_8px_30px_rgba(15,23,42,0.04)] transition hover:border-emerald-200/80 hover:bg-white">

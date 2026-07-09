@@ -2,7 +2,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "/src/firebaseConfig.js";
 import ProductCard from "./ProductCard";
-import AddProductModal from "./AddProductModal";
+import ProductModal from "./ProductModal"; 
 import { AuthContext } from "../../context/AuthContext";
 import ProductCatalogHeader from "./CatalogHeader";
 import ProductCatalogSidebar from "./SideBar/ProductCatalogSidebar";
@@ -23,7 +23,11 @@ const ProductCatalog = () => {
   const [sortOrder, setSortOrder] = useState("featured");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); 
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -37,24 +41,18 @@ const ProductCatalog = () => {
           id: doc.id,
           ...doc.data(),
         }));
-
         setProducts(productsData);
       } catch (error) {
         console.error("Error cargando componentes:", error);
       }
     };
-
     fetchProducts();
   }, [refreshTrigger]);
 
   const availableBrands = useMemo(() => {
     const brandCounts = products.reduce((accumulator, product) => {
       const brand = product.brand?.trim();
-
-      if (!brand) {
-        return accumulator;
-      }
-
+      if (!brand) return accumulator;
       const normalizedBrand = brand.toUpperCase();
       accumulator.set(normalizedBrand, {
         label: brand,
@@ -130,6 +128,20 @@ const ProductCatalog = () => {
     );
   };
 
+  const openEditProductModal = (product) => {
+    setSelectedProduct(product);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditProductModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedProduct(null);
+  };
+
+  const handleActionSuccess = () => {
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
   return (
     <section className="relative w-full bg-[linear-gradient(180deg,rgba(248,250,252,0.65),rgba(255,255,255,0.94))] px-4 py-6 font-['Montserrat'] md:px-6 lg:px-10">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -170,19 +182,21 @@ const ProductCatalog = () => {
                 <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">Resultados</p>
                 <p className="mt-1 text-sm font-semibold text-slate-700">{filteredProducts.length} componentes</p>
               </div>
-
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="rounded-full border border-slate-200 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500"
-              >
+              <button type="button" onClick={resetFilters} className="rounded-full border border-slate-200 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">
                 Limpiar
               </button>
             </div>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)
+                filteredProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    isAdmin={user?.role === "admin"}
+                    onEditProduct={openEditProductModal}
+                  />
+                ))
               ) : (
                 <ProductCatalogEmptyState onResetFilters={resetFilters} />
               )}
@@ -191,10 +205,17 @@ const ProductCatalog = () => {
         </div>
       </div>
 
-      <AddProductModal
+      <ProductModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onProductAdded={() => setRefreshTrigger((previousValue) => previousValue + 1)}
+        onActionSuccess={handleActionSuccess}
+      />
+
+      <ProductModal
+        isOpen={isEditModalOpen}
+        onClose={closeEditProductModal}
+        product={selectedProduct}
+        onActionSuccess={handleActionSuccess}
       />
     </section>
   );
