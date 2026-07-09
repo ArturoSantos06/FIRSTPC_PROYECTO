@@ -1,6 +1,9 @@
 import React from "react";
+import { useCart } from '../../context/CartContext';
 
 const ProductCard = ({ product, isAdmin, onEditProduct }) => {
+  const { addItem } = useCart();
+
   return (
     <div className="group relative overflow-hidden bg-white p-5 rounded-[32px] border border-slate-100 shadow-[0_10px_30px_rgba(100,116,139,0.02)] flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(16,185,129,0.05)] hover:border-[#10B981]/20">
       
@@ -47,7 +50,12 @@ const ProductCard = ({ product, isAdmin, onEditProduct }) => {
           </span>
         </div>
 
-        <button className="h-11 w-11 bg-slate-900 hover:bg-[#10B981] text-white flex items-center justify-center rounded-full shadow-sm transition-all duration-300 hover:shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer">
+        <button
+          type="button"
+          onClick={() => addItem(product)}
+          className="h-11 w-11 bg-slate-900 hover:bg-[#10B981] text-white flex items-center justify-center rounded-full shadow-sm transition-all duration-300 hover:shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          aria-label={`Agregar ${product.name} al carrito`}
+        >
           <span className="text-md font-bold">+</span>
         </button>
       </div>

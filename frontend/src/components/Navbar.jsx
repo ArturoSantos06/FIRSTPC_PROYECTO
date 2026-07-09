@@ -1,9 +1,11 @@
-import React, { useContext, useCallback } from 'react';
+import React, { useContext, useCallback, useState } from 'react';
 import logoStore from '../assets/logof.png';
 import { Link, useNavigate } from 'react-router-dom';
 import { signOut } from "firebase/auth";
 import { auth } from "/src/firebaseConfig.js"; 
 import { AuthContext } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import CartDrawer from './Cart/CartDrawer';
 import UserProfileMenu from './UserProfileMenu';
 
 const SearchIcon = () => (
@@ -20,7 +22,9 @@ const CartIcon = () => (
 
 const Navbar = () => {
   const { user } = useContext(AuthContext);
+  const { totalItems } = useCart();
   const navigate = useNavigate();
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
 
   const handleSignOut = useCallback(async () => {
     try {
@@ -83,8 +87,18 @@ const Navbar = () => {
             <button className="text-[#64748B] hover:text-[#10B981] transition-colors duration-200 p-1">
               <SearchIcon />
             </button>
-            <button className="text-[#64748B] hover:text-[#10B981] transition-colors duration-200 p-1">
+            <button
+              type="button"
+              onClick={() => setIsCartDrawerOpen(true)}
+              className="relative p-1 text-[#64748B] transition-colors duration-200 hover:text-[#10B981]"
+              aria-label="Abrir carrito"
+            >
               <CartIcon />
+              {totalItems > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-[#10B981] px-1.5 py-0.5 text-[10px] font-black leading-none text-white shadow-[0_8px_20px_rgba(16,185,129,0.3)]">
+                  {totalItems}
+                </span>
+              )}
             </button>
 
             {user ? (
@@ -101,6 +115,8 @@ const Navbar = () => {
 
         </div>
       </div>
+
+      <CartDrawer isOpen={isCartDrawerOpen} onClose={() => setIsCartDrawerOpen(false)} />
     </header>
   );
 };

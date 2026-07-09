@@ -16,7 +16,7 @@ export const CATEGORIES = [
 export const TRENDING_BRANDS = ["ASUS", "AMD", "Intel", "Corsair", "MSI", "NVIDIA", "Gigabyte", "Logitech", "Razer", "HyperX"];
 
 export const SORT_OPTIONS = [
-  { value: "featured", label: "Relevancia visual" },
+  { value: "featured", label: "Más relevantes" },
   { value: "price-asc", label: "Precio: Menor a Mayor" },
   { value: "price-desc", label: "Precio: Mayor a Menor" },
 ];

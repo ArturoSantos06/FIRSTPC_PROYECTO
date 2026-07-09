@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Home from './pages/Home';
 import Login from './pages/Login';
 import ProductCatalog from "./components/Products/ProductCatalog";
+import ShoppingCart from "./components/Cart/ShoppingCart";
 import Navbar from "./components/Navbar";
 import { AuthContext } from './context/AuthContext';
 import AdminRoutes from './components/AdminRoutes'; 
@@ -37,6 +38,27 @@ function App() {
               <ProductCatalog />
             </div>
           } 
+        />
+
+        <Route
+          path="/carrito"
+          element={
+            <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
+              <Navbar />
+              <div className="mx-auto w-full max-w-7xl">
+                <ShoppingCart />
+              </div>
+            </div>
+          }
+        />
+
+        <Route
+          path="/#"
+          element={
+            <div className="min-h-screen bg-[#F8FAFC]/50">
+              <Navbar />
+            </div>
+          }
         />
 
         <Route element={<AdminRoutes />}>
