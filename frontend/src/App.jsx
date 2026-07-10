@@ -1,8 +1,9 @@
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import './index.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import CheckoutAddress from './pages/CheckoutAddress';
 import ProductCatalog from "./components/Products/ProductCatalog";
 import ShoppingCart from "./components/Cart/ShoppingCart";
 import Navbar from "./components/Navbar";
@@ -53,11 +54,16 @@ function App() {
         />
 
         <Route
-          path="/#"
+          path="/checkout/direccion"
           element={
-            <div className="min-h-screen bg-[#F8FAFC]/50">
-              <Navbar />
-            </div>
+            user ? (
+              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
+                <Navbar />
+                <div className="mx-auto w-full max-w-7xl">
+                  <CheckoutAddress />
+                </div>
+              </div>
+            ) : <Navigate to="/login" replace />
           }
         />
 
