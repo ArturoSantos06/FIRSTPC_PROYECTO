@@ -11,15 +11,24 @@ const OrderSummary = ({
   uniqueProducts,
   totalAmount,
   shippingCost = 0,
+  ivaAmount,
+  showShipping = false,
+  onProceed,
+  isReadyToProceed,
   onButtonClick,
   buttonText = 'Ir al siguiente paso',
   isButtonDisabled = false,
   children,
+  className = '',
 }) => {
+  
+  const calculatedIvaAmount = ivaAmount ?? totalAmount * (0.16 / 1.16);
   const orderTotal = totalAmount + shippingCost;
+  const proceedHandler = onProceed || onButtonClick;
+  const isDisabled = isReadyToProceed === undefined ? isButtonDisabled : !isReadyToProceed;
 
   return (
-    <aside className="h-fit rounded-[30px] border border-slate-200/70 bg-slate-50 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.05)] sm:p-6">
+    <aside className={`sticky top-28 h-fit w-full rounded-[30px] border border-slate-200/70 bg-slate-50 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.05)] sm:p-6 ${className}`}>
       {children && <div className="mb-6">{children}</div>}
 
       <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
@@ -44,9 +53,14 @@ const OrderSummary = ({
             <span className="text-xl font-black text-slate-900">{moneyFormatter.format(totalAmount)}</span>
           </div>
 
-          <div className="flex items-center justify-between text-sm text-slate-500">
+          {showShipping && <div className="flex items-center justify-between text-sm text-slate-500">
             <span>Envío</span>
             <span className="font-bold text-slate-900">{moneyFormatter.format(shippingCost)}</span>
+          </div>}
+
+          <div className="flex items-center justify-between text-sm text-slate-500">
+            <span>IVA (16%)</span>
+            <span className="font-bold text-slate-900">{moneyFormatter.format(calculatedIvaAmount)}</span>
           </div>
 
           <div className="flex items-center justify-between border-t border-slate-100 pt-4 text-base text-slate-600">
@@ -55,11 +69,11 @@ const OrderSummary = ({
           </div>
         </div>
 
-        {onButtonClick ? (
+        {proceedHandler ? (
           <button
             type="button"
-            onClick={onButtonClick}
-            disabled={isButtonDisabled}
+            onClick={proceedHandler}
+            disabled={isDisabled}
             className="mt-6 block w-full rounded-full bg-[#10B981] px-5 py-3 text-center text-sm font-bold text-white shadow-[0_14px_30px_rgba(16,185,129,0.24)] transition hover:bg-emerald-600 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
           >
             {buttonText}

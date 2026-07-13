@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const menuItems = [
+  'Mis compras',
   'Mis favoritos',
   'Mis datos de envío',
   'Datos de pago y facturación',
@@ -23,6 +25,7 @@ const getInitials = (name = '') => {
 };
 
 const UserProfileMenu = ({ user, onSignOut }) => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -88,7 +91,10 @@ const UserProfileMenu = ({ user, onSignOut }) => {
                 key={item}
                 type="button"
                 className="flex w-full items-center justify-between px-5 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  if (item === 'Mis compras') navigate('/perfil/compras');
+                }}
               >
                 <span>{item}</span>
                 <span className="text-slate-300">›</span>

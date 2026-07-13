@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import CheckoutStepper from '../components/Cart/CheckoutStepper';
-import OrderSummary from '../components/Cart/OrderSummary';
-import AddressCard from '../components/Checkout/AddressCard';
-import AddressForm from '../components/Checkout/AddressForm';
-import BillingSection from '../components/Checkout/BillingSection';
-import BillingModal from '../components/Checkout/BillingModal';
-import SuccessModal from '../components/Checkout/SuccessModal';
+import { useNavigate } from 'react-router-dom';
+import CheckoutLayout from '../components/Checkout/common/CheckoutLayout';
+import OrderSummary from '../components/Checkout/common/OrderSummary';
+import AddressCard from '../components/Checkout/Step2/AddressCard';
+import AddressForm from '../components/Checkout/Step2/AddressForm';
+import BillingSection from '../components/Checkout/Step2/BillingSection';
+import BillingModal from '../components/Checkout/Step2/BillingModal';
+import SuccessModal from '../components/Checkout/Step2/SuccessModal';
 import { useCart } from '../context/CartContext';
 import { addDoc, collection, deleteDoc, doc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
@@ -24,6 +25,7 @@ const mexicanStates = [
 ];
 
 const CheckoutAddress = () => {
+  const navigate = useNavigate();
   const { cartItems, totalItems, totalAmount } = useCart();
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
@@ -40,7 +42,6 @@ const CheckoutAddress = () => {
   const [deleteError, setDeleteError] = useState('');
   const [billingData, setBillingData] = useState(null);
   const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
-  const shippingCost = cartItems.length > 0 ? 133 : 0;
 
   useEffect(() => {
     const loadSavedAddresses = async () => {
@@ -66,8 +67,6 @@ const CheckoutAddress = () => {
       const userId = auth.currentUser?.uid;
       if (!userId) return;
       try {
-        // Se busca por userId para mantener compatibilidad con perfiles creados
-        // antes de usar el uid como ID del documento.
         const billingSnapshot = await getDocs(query(
           collection(db, 'billing_profiles'),
           where('userId', '==', userId),
@@ -179,16 +178,18 @@ const CheckoutAddress = () => {
   };
 
   return (
-    <section className="w-full font-['Montserrat']">
-      <div className="overflow-hidden rounded-[32px] border border-slate-200/70 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
-        <CheckoutStepper currentStep={2} />
-        <div className="border-b border-slate-100 bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(255,255,255,0.98))] px-6 py-5 sm:px-8">
-          <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-emerald-500">FIRSTPC Checkout</p>
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Dirección de envío</h2>
-          <p className="mt-1 text-sm font-medium text-slate-500">Elige una dirección guardada o agrega una nueva.</p>
-        </div>
-        <div className="grid items-start gap-6 p-4 sm:p-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-8 xl:p-8">
-          <div>
+    <>
+    <CheckoutLayout
+      currentStep={2}
+      title="Dirección de envío"
+      description="Elige una dirección guardada o agrega una nueva."
+      summary={(
+        <OrderSummary totalItems={totalItems} uniqueProducts={cartItems.length} totalAmount={totalAmount} buttonText="Ir al siguiente paso" onButtonClick={() => navigate('/checkout/envio-pago', { state: { selectedAddressId } })} isButtonDisabled={!selectedAddressId}>
+          <BillingSection billingData={billingData} onOpenBillingModal={() => setIsBillingModalOpen(true)} />
+        </OrderSummary>
+      )}
+    >
+        <div>
             {isLoadingAddress ? <div className="rounded-[28px] border border-slate-200/70 bg-slate-50/50 p-8 text-center shadow-sm"><p className="text-sm font-bold text-slate-500">Cargando direcciones...</p></div> : isAddingNewAddress ? (
               <AddressForm addressForm={addressForm} mexicanStates={mexicanStates} isSaving={isSaving} saveError={saveError} isEditing={Boolean(editingAddressId)} showCancel={addresses.length > 0} onCancel={handleCancel} onChange={handleChange} onGenderChange={setGender} onSubmit={handleSubmit} />
             ) : (
@@ -198,12 +199,8 @@ const CheckoutAddress = () => {
                 <button type="button" onClick={handleAddAddress} className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-300 bg-white py-4 text-sm font-bold text-slate-700 transition hover:border-emerald-400 hover:text-emerald-600"><span className="text-xl leading-none">+</span> Agregar otra dirección</button>
               </div>
             )}
-          </div>
-          <OrderSummary totalItems={totalItems} uniqueProducts={cartItems.length} totalAmount={totalAmount} shippingCost={shippingCost} buttonText="Ir al siguiente paso" onButtonClick={() => {}} isButtonDisabled={!selectedAddressId}>
-            <BillingSection billingData={billingData} onOpenBillingModal={() => setIsBillingModalOpen(true)} />
-          </OrderSummary>
         </div>
-      </div>
+    </CheckoutLayout>
       <SuccessModal isOpen={isSuccessModalOpen} onContinue={() => setIsSuccessModalOpen(false)} title={successTitle} />
       <SuccessModal
         isOpen={Boolean(addressToDelete)}
@@ -218,7 +215,7 @@ const CheckoutAddress = () => {
         onCancel={() => { if (!isDeleting) setAddressToDelete(null); }}
       />
       <BillingModal isOpen={isBillingModalOpen} onClose={() => setIsBillingModalOpen(false)} initialData={billingData} onSave={handleSaveBilling} />
-    </section>
+    </>
   );
 };
 

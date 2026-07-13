@@ -4,8 +4,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Home from './pages/Home';
 import Login from './pages/Login';
 import CheckoutAddress from './pages/CheckoutAddress';
+import CheckoutShippingPayment from './pages/CheckoutShippingPayment';
+import CheckoutConfirmOrder from './pages/CheckoutConfirmOrder';
+import UserProfile from './pages/UserProfile';
 import ProductCatalog from "./components/Products/ProductCatalog";
-import ShoppingCart from "./components/Cart/ShoppingCart";
+import CheckoutCart from "./pages/CheckoutCart";
 import Navbar from "./components/Navbar";
 import { AuthContext } from './context/AuthContext';
 import AdminRoutes from './components/AdminRoutes'; 
@@ -47,7 +50,7 @@ function App() {
             <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
               <Navbar />
               <div className="mx-auto w-full max-w-7xl">
-                <ShoppingCart />
+                <CheckoutCart />
               </div>
             </div>
           }
@@ -61,6 +64,48 @@ function App() {
                 <Navbar />
                 <div className="mx-auto w-full max-w-7xl">
                   <CheckoutAddress />
+                </div>
+              </div>
+            ) : <Navigate to="/login" replace />
+          }
+        />
+
+        <Route
+          path="/checkout/envio-pago"
+          element={
+            user ? (
+              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
+                <Navbar />
+                <div className="mx-auto w-full max-w-7xl">
+                  <CheckoutShippingPayment />
+                </div>
+              </div>
+            ) : <Navigate to="/login" replace />
+          }
+        />
+
+        <Route
+          path="/checkout/confirmacion"
+          element={
+            user ? (
+              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
+                <Navbar />
+                <div className="mx-auto w-full max-w-7xl">
+                  <CheckoutConfirmOrder />
+                </div>
+              </div>
+            ) : <Navigate to="/login" replace />
+          }
+        />
+
+        <Route
+          path="/perfil/compras"
+          element={
+            user ? (
+              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
+                <Navbar />
+                <div className="mx-auto w-full max-w-7xl">
+                  <UserProfile />
                 </div>
               </div>
             ) : <Navigate to="/login" replace />
