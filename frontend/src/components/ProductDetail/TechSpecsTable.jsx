@@ -1,0 +1,15 @@
+import { useMemo, useState } from 'react';
+
+const toGroups = (fullSpecs) => Object.entries(fullSpecs || {}).map(([category, details]) => ({ category, rows: Array.isArray(details) ? details.map((row) => Array.isArray(row) ? row : [row.label || row.name, row.value]) : Object.entries(details || {}) }));
+const Value = ({ value }) => typeof value === 'boolean' ? <span className={value ? 'font-black text-emerald-500' : 'font-black text-rose-400'}>{value ? '✓' : '✗'}</span> : value;
+
+const TechSpecsTable = ({ fullSpecs = {} }) => {
+  const [query, setQuery] = useState('');
+  const groups = useMemo(() => toGroups(fullSpecs), [fullSpecs]);
+  const [open, setOpen] = useState(() => groups.map((group) => group.category));
+  const filtered = useMemo(() => groups.map((group) => ({ ...group, rows: group.rows.filter(([key, value]) => `${key} ${value}`.toLowerCase().includes(query.toLowerCase())) })).filter((group) => group.rows.length), [groups, query]);
+  const toggle = (category) => setOpen((current) => current.includes(category) ? current.filter((item) => item !== category) : [...current, category]);
+  return <section id="especificaciones" className="rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_15px_45px_rgba(15,23,42,0.03)] md:p-10"><div className="flex flex-col justify-between gap-5 md:flex-row md:items-end"><div><p className="mb-2 text-xs font-black uppercase tracking-[.2em] text-emerald-500">Ficha técnica</p><h2 className="text-2xl font-black tracking-tight text-slate-900 md:text-3xl">Especificaciones técnicas</h2></div><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar característica..." aria-label="Buscar especificación" className="w-full rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-700 outline-none transition duration-200 placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white md:max-w-xs" /></div><div className="mt-8 overflow-hidden rounded-2xl border border-slate-100">{filtered.map((group) => <div key={group.category} className="border-b border-slate-100 last:border-0"><button type="button" onClick={() => toggle(group.category)} className="flex w-full items-center justify-between bg-slate-50 px-5 py-4 text-left transition duration-200 hover:bg-emerald-50"><span className="text-sm font-black text-slate-800">{group.category}</span><span className="text-xl font-medium text-slate-400">{open.includes(group.category) ? '−' : '+'}</span></button>{open.includes(group.category) && <div className="divide-y divide-slate-100">{group.rows.map(([label, value]) => <div key={label} className="grid grid-cols-2 px-5 py-4 text-sm even:bg-slate-50/50"><span className="font-semibold text-slate-500">{label}</span><span className="font-black text-slate-800"><Value value={value} /></span></div>)}</div>}</div>)}{!filtered.length && <p className="px-5 py-8 text-center text-sm font-semibold text-slate-400">No encontramos especificaciones para “{query}”.</p>}</div></section>;
+};
+
+export default TechSpecsTable;

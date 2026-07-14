@@ -1,6 +1,4 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { twMerge } from 'tailwind-merge';
 
 import cpuImg from '../../assets/cpu.png';
 import gpuImg from '../../assets/gpu.png';
@@ -16,28 +14,28 @@ import monitorImg from '../../assets/monitor.png';
 import computdoraImg from '../../assets/computadora.png';
 
 const categories = [
-  { name: 'Procesadores', path: '/componentes/procesadores', image: cpuImg },
-  { name: 'Tarjetas de Video', path: '/componentes/tarjetas-video', image: gpuImg },
-  { name: 'Tarjetas Madre', path: '/componentes/tarjetas-madre', image: motherboardImg },
-  { name: 'Gabinetes', path: '/componentes/gabinetes', image: caseImg },
-  { name: 'Enfriamiento', path: '/componentes/enfriamiento', image: coolingImg },
-  { name: 'Memorias RAM', path: '/componentes/memorias-ram', image: ramImg },
-  { name: 'Almacenamiento', path: '/componentes/almacenamiento', image: ssdImg },
-  { name: 'Fuentes de Poder', path: '/componentes/fuentes-poder', image: psuImg },
-  { name: 'Monitores', path: '/componentes/monitores', image: monitorImg },
-  { name: 'Computadora', path: '/componentes/computadora', image: computdoraImg },
-  { name: 'Teclados y Mouses', path: '/componentes/perifericos', image: peripheralsImg },
-  { name: 'Audífonos Gaming', path: '/componentes/audio', image: audioImg },
+  { id: 1, name: 'Procesadores', slug: 'procesadores', img: cpuImg },
+  { id: 2, name: 'Tarjetas de Video', slug: 'tarjetas-de-video', img: gpuImg },
+  { id: 3, name: 'Tarjetas Madre', slug: 'tarjetas-madre', img: motherboardImg },
+  { id: 4, name: 'Gabinetes', slug: 'gabinetes', img: caseImg },
+  { id: 5, name: 'Enfriamiento', slug: 'enfriamiento', img: coolingImg },
+  { id: 6, name: 'Memorias RAM', slug: 'memorias-ram', img: ramImg },
+  { id: 7, name: 'Almacenamiento', slug: 'almacenamiento', img: ssdImg },
+  { id: 8, name: 'Fuentes de Poder', slug: 'fuentes-de-poder', img: psuImg },
+  { id: 9, name: 'Monitores', slug: 'monitores', img: monitorImg },
+  { id: 10, name: 'Computadora', slug: 'computadora', img: computdoraImg },
+  { id: 11, name: 'Teclados y Mouses', slug: 'teclados-mouses', img: peripheralsImg },
+  { id: 12, name: 'Audífonos Gaming', slug: 'audifonos-gaming', img: audioImg },
 ];
 
-const CategoryCard = ({ name, path, image }) => (
+const CategoryCard = ({ name, slug, img }) => (
   <Link
-    to={path}
+    to={`/catalogo?categoria=${slug}`}
     className="group relative overflow-hidden rounded-[28px] p-6 flex items-end justify-start bg-white border border-slate-100 shadow-[0_8px_24px_rgba(100,116,139,0.04)] transition-all duration-300 min-h-[200px] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(16,185,129,0.08)] hover:border-[#10B981]/30 w-full"
   >
     <div className="absolute inset-y-0 right-4 w-1/2 h-full flex justify-end items-center pointer-events-none z-10">
       <img 
-        src={image} 
+        src={img} 
         alt={name} 
         className="w-auto h-auto max-h-[80%] object-contain opacity-85 group-hover:opacity-100 group-hover:scale-105 group-hover:-rotate-2 transition-all duration-500 select-none filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.06)]"
       />
@@ -70,7 +68,7 @@ const CategoryGrid = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {categories.map((cat) => (
-            <CategoryCard key={cat.name} {...cat} />
+            <CategoryCard key={cat.id} {...cat} />
           ))}
         </div>
 

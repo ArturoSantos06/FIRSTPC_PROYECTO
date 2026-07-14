@@ -1,12 +1,14 @@
 import { useContext, useEffect, useMemo, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { useSearchParams } from "react-router-dom";
+import { collection, deleteDoc, doc, getDocs } from "firebase/firestore";
 import { db } from "/src/firebaseConfig.js";
 import ProductCard from "./ProductCard";
-import ProductModal from "./ProductModal"; 
+import AddProductModal from "./AddProductModal"; 
 import { AuthContext } from "../../context/AuthContext";
 import ProductCatalogHeader from "./CatalogHeader";
 import ProductCatalogSidebar from "./SideBar/ProductCatalogSidebar";
 import ProductCatalogEmptyState from "./EmptyState";
+import DeleteProductModal from "./DeleteProductModal";
 import {
   CATEGORIES,
   TRENDING_BRANDS,
@@ -14,11 +16,28 @@ import {
   parsePrice,
 } from "./SideBar/SideBarData";
 
+const CATEGORY_ALIASES = {
+  "tarjetas-de-video": ["tarjetas-de-video", "tarjetas video", "graficas", "gráficas"],
+  "tarjetas-madre": ["tarjetas-madre", "tarjetas madre"],
+  "memorias-ram": ["memorias-ram", "memorias ram", "ram"],
+  "fuentes-de-poder": ["fuentes-de-poder", "fuentes de poder", "fuentes"],
+  "teclados-mouses": ["teclados-mouses", "teclados y mouses", "perifericos", "periféricos"],
+  "audifonos-gaming": ["audifonos-gaming", "audífonos gaming", "audio"],
+};
+
+const normalizeCategory = (value) =>
+  normalizeText(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
 const ProductCatalog = () => {
   const { user } = useContext(AuthContext);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get("categoria") || "");
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [sortOrder, setSortOrder] = useState("featured");
   const [priceMin, setPriceMin] = useState("");
@@ -27,6 +46,9 @@ const ProductCatalog = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); 
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -85,7 +107,11 @@ const ProductCatalog = () => {
       const productName = normalizeText(product.name);
       const productBrand = normalizeText(product.brand);
       const productCategory = normalizeText(product.category);
-      const productDescription = normalizeText(product.description);
+      const productDescription = normalizeText(
+        typeof product.description === "string"
+          ? product.description
+          : `${product.description?.title || ""} ${product.description?.content || ""}`
+      );
       const productPrice = parsePrice(product.price);
 
       const matchesSearch =
@@ -95,7 +121,10 @@ const ProductCatalog = () => {
         productCategory.includes(normalizedSearch) ||
         productDescription.includes(normalizedSearch);
 
-      const matchesCategory = selectedCategory ? productCategory === selectedCategory : true;
+      const categoryOptions = CATEGORY_ALIASES[selectedCategory] || [selectedCategory];
+      const matchesCategory = selectedCategory
+        ? categoryOptions.some((category) => normalizeCategory(category) === normalizeCategory(productCategory))
+        : true;
       const matchesBrands = activeBrands.size > 0 ? activeBrands.has(product.brand?.trim().toUpperCase()) : true;
       const matchesPrice = productPrice >= minValue && productPrice <= maxValue;
 
@@ -120,6 +149,19 @@ const ProductCatalog = () => {
     setSortOrder("featured");
     setPriceMin("");
     setPriceMax("");
+    setSearchParams({}, { replace: true });
+  };
+
+  useEffect(() => {
+    setSelectedCategory(searchParams.get("categoria") || "");
+  }, [searchParams]);
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    const nextParams = new URLSearchParams(searchParams);
+    if (category) nextParams.set("categoria", category);
+    else nextParams.delete("categoria");
+    setSearchParams(nextParams, { replace: true });
   };
 
   const toggleBrand = (brand) => {
@@ -142,6 +184,34 @@ const ProductCatalog = () => {
     setRefreshTrigger((prev) => prev + 1);
   };
 
+  const openDeleteProductModal = (product) => {
+    if (user?.role !== "admin") return;
+    setDeleteError("");
+    setProductToDelete(product);
+  };
+
+  const closeDeleteProductModal = () => {
+    if (!isDeleting) setProductToDelete(null);
+  };
+
+  const handleDeleteProduct = async () => {
+    if (user?.role !== "admin" || !productToDelete?.id) return;
+    setIsDeleting(true);
+    setDeleteError("");
+    try {
+      await deleteDoc(doc(db, "products", productToDelete.id));
+      setProductToDelete(null);
+      setIsEditModalOpen(false);
+      setSelectedProduct(null);
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error eliminando producto:", error);
+      setDeleteError("No se pudo eliminar el producto. Intenta nuevamente.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <section className="relative w-full bg-[linear-gradient(180deg,rgba(248,250,252,0.65),rgba(255,255,255,0.94))] px-4 py-6 font-['Montserrat'] md:px-6 lg:px-10">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -160,7 +230,7 @@ const ProductCatalog = () => {
             search={search}
             onSearchChange={setSearch}
             selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
+            onCategoryChange={handleCategoryChange}
             selectedBrands={selectedBrands}
             onToggleBrand={toggleBrand}
             sortOrder={sortOrder}
@@ -205,17 +275,20 @@ const ProductCatalog = () => {
         </div>
       </div>
 
-      <ProductModal
+      <AddProductModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onActionSuccess={handleActionSuccess}
       />
 
-      <ProductModal
+      {user?.role === "admin" && <DeleteProductModal product={productToDelete} loading={isDeleting} errorMessage={deleteError} onClose={closeDeleteProductModal} onConfirm={handleDeleteProduct} />}
+
+      <AddProductModal
         isOpen={isEditModalOpen}
         onClose={closeEditProductModal}
         product={selectedProduct}
         onActionSuccess={handleActionSuccess}
+        onDeleteProduct={openDeleteProductModal}
       />
     </section>
   );

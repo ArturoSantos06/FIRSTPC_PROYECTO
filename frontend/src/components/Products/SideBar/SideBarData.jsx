@@ -1,16 +1,16 @@
 export const CATEGORIES = [
   { id: "procesadores", label: "Procesadores", icon: "CPU" },
-  { id: "graficas", label: "Gráficas", icon: "GPU" },
-  { id: "tarjetas madre", label: "Tarjetas Madre", icon: "MB" },
+  { id: "tarjetas-de-video", label: "Tarjetas de Video", icon: "GPU" },
+  { id: "tarjetas-madre", label: "Tarjetas Madre", icon: "MB" },
   { id: "gabinetes", label: "Gabinetes", icon: "CASE" },
   { id: "enfriamiento", label: "Enfriamiento", icon: "COOL" },
-  { id: "ram", label: "RAM", icon: "RAM" },
+  { id: "memorias-ram", label: "Memorias RAM", icon: "RAM" },
   { id: "almacenamiento", label: "Almacenamiento", icon: "SSD" },
-  { id: "fuentes", label: "Fuentes", icon: "PSU" },
+  { id: "fuentes-de-poder", label: "Fuentes de Poder", icon: "PSU" },
   { id: "monitores", label: "Monitores", icon: "MON" },
   { id: "computadora", label: "Computadoras", icon: "PC" },
-  { id: "perifericos", label: "Periféricos", icon: "IO" },
-  { id: "audio", label: "Audio", icon: "AUX" },
+  { id: "teclados-mouses", label: "Teclados y Mouses", icon: "IO" },
+  { id: "audifonos-gaming", label: "Audífonos Gaming", icon: "AUX" },
 ];
 
 export const TRENDING_BRANDS = ["ASUS", "AMD", "Intel", "Corsair", "MSI", "NVIDIA", "Gigabyte", "Logitech", "Razer", "HyperX"];

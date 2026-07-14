@@ -1,0 +1,7 @@
+const DeleteProductModal = ({ product, loading, errorMessage, onClose, onConfirm }) => {
+  if (!product) return null;
+
+  return <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4 font-['Montserrat'] backdrop-blur-sm"><div className="w-full max-w-md rounded-[32px] border border-slate-100 bg-white p-7 shadow-[0_25px_80px_rgba(15,23,42,0.2)]"><div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-50 text-2xl text-rose-500">!</div><h2 className="mt-5 text-center text-xl font-black text-slate-900">¿Eliminar producto?</h2><p className="mt-3 text-center text-sm font-medium leading-6 text-slate-500">Esta acción eliminará <strong className="text-slate-800">{product.name}</strong> del catálogo. No podrás deshacerla.</p>{errorMessage && <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-xs font-bold text-rose-600">{errorMessage}</p>}<div className="mt-7 flex gap-3"><button type="button" onClick={onClose} disabled={loading} className="w-1/2 rounded-full bg-slate-100 py-3 text-sm font-black text-slate-600 transition duration-200 hover:bg-slate-200 disabled:opacity-50">Cancelar</button><button type="button" onClick={onConfirm} disabled={loading} className="w-1/2 rounded-full bg-rose-500 py-3 text-sm font-black text-white transition duration-200 hover:bg-rose-600 disabled:cursor-wait disabled:opacity-60">{loading ? 'Eliminando...' : 'Sí, eliminar'}</button></div></div></div>;
+};
+
+export default DeleteProductModal;

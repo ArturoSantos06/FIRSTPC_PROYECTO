@@ -43,7 +43,7 @@ export const CartProvider = ({ children }) => {
     }
   }, [cartItems]);
 
-  const addItem = (product) => {
+  const addItem = (product, requestedQuantity = 1) => {
     if (!product?.id) {
       return;
     }
@@ -52,12 +52,15 @@ export const CartProvider = ({ children }) => {
       const existingItem = currentItems.find((item) => item.id === product.id);
       const maxStock = Number.isFinite(Number(product.stock)) && Number(product.stock) > 0 ? Number(product.stock) : Number.POSITIVE_INFINITY;
 
+      const quantityToAdd = Math.max(1, Number(requestedQuantity) || 1);
+
       if (!existingItem) {
         return [
           ...currentItems,
           {
             ...product,
-            quantity: 1,
+            image: product.images?.[0] || product.image || '',
+            quantity: Math.min(quantityToAdd, maxStock),
           },
         ];
       }
@@ -69,7 +72,8 @@ export const CartProvider = ({ children }) => {
 
         return {
           ...item,
-          quantity: Math.min((Number(item.quantity) || 1) + 1, maxStock),
+          image: product.images?.[0] || product.image || item.image || '',
+          quantity: Math.min((Number(item.quantity) || 1) + quantityToAdd, maxStock),
         };
       });
     });

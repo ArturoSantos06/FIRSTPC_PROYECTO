@@ -11,7 +11,7 @@ const CartItem = ({ item, onIncrement, onDecrement, onChangeQuantity, onRemove }
     <article className="grid gap-4 rounded-[28px] border border-slate-200/70 bg-slate-50/70 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.04)] transition hover:border-emerald-200/80 hover:bg-white sm:grid-cols-[120px_minmax(0,1fr)]">
       <div className="flex items-center justify-center overflow-hidden rounded-[24px] border border-slate-100 bg-white p-3 shadow-[0_10px_25px_rgba(15,23,42,0.06)] sm:h-full">
         <img
-          src={item.image || 'https://via.placeholder.com/300?text=FIRSTPC'}
+          src={item.images?.[0] || item.image || 'https://via.placeholder.com/300?text=FIRSTPC'}
           alt={item.name}
           className="h-full max-h-[100px] w-full object-contain sm:max-h-none"
         />

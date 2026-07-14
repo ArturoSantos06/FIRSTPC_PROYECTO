@@ -12,6 +12,7 @@ import CheckoutCart from "./pages/CheckoutCart";
 import Navbar from "./components/Navbar";
 import { AuthContext } from './context/AuthContext';
 import AdminRoutes from './components/AdminRoutes'; 
+import ProductDetailPage from './pages/ProductDetailPage';
 
 function App() {
   const { user, loading } = useContext(AuthContext);
@@ -33,7 +34,19 @@ function App() {
         />
 
         <Route path="/" element={<Home />} />
+
+        <Route path="/producto/:id" element={<ProductDetailPage />} />
         
+        <Route 
+          path="/catalogo" 
+          element={
+            <div className="min-h-screen bg-[#F8FAFC]/50 pt-28">
+              <Navbar />
+              <ProductCatalog />
+            </div>
+          } 
+        />
+
         <Route 
           path="/componentes" 
           element={

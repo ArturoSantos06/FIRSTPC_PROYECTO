@@ -52,7 +52,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 <article key={item.id} className="rounded-[24px] border border-slate-200/70 bg-slate-50/50 p-3 shadow-sm transition hover:shadow-md">
                   <div className="flex gap-3">
                     <img
-                      src={item.image || 'https://via.placeholder.com/300?text=FIRSTPC'}
+                      src={item.images?.[0] || item.image || 'https://via.placeholder.com/300?text=FIRSTPC'}
                       alt={item.name}
                       className="h-16 w-16 rounded-[16px] object-cover border border-slate-100"
                     />
@@ -117,13 +117,6 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 className="flex-1 rounded-full border border-slate-200 bg-slate-50 py-2.5 text-center text-xs font-bold text-slate-700 transition hover:bg-slate-100"
               >
                 Ver carrito
-              </Link>
-              <Link
-                to="/#"
-                onClick={onClose}
-                className="flex-1 rounded-full bg-[#10B981] py-2.5 text-center text-xs font-bold text-white shadow-[0_8px_20px_rgba(16,185,129,0.25)] transition hover:bg-emerald-600"
-              >
-                Pagar
               </Link>
             </div>
           </div>
