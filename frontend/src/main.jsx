@@ -4,12 +4,15 @@ import App from './App.jsx'
 import './index.css'
 import { AuthProvider } from './context/AuthProvider.jsx';
 import { CartProvider } from './context/CartProvider.jsx';
+import { FavoritesProvider } from './hooks/useFavorites.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
       <CartProvider>
-        <App />
+        <FavoritesProvider>
+          <App />
+        </FavoritesProvider>
       </CartProvider>
     </AuthProvider>
   </React.StrictMode>,

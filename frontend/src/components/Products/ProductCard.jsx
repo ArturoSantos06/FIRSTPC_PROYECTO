@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import FavoriteButton from '../FavoriteButton';
 
 const ProductCard = ({ product, isAdmin, onEditProduct }) => {
   const { addItem } = useCart();
@@ -30,12 +31,14 @@ const ProductCard = ({ product, isAdmin, onEditProduct }) => {
         <button type="button" onClick={(event) => { event.stopPropagation(); onEditProduct(product); }} className="absolute right-4 top-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-white/95 text-[14px] font-black text-slate-500 shadow-[0_12px_26px_rgba(15,23,42,0.1)] transition hover:-translate-y-0.5 hover:border-[#10B981]/30 hover:text-[#10B981]" aria-label={`Editar ${product.name}`}>✎</button>
       )}
 
+      <div className={`absolute top-4 z-20 ${isAdmin ? 'right-16' : 'right-4'}`}><FavoriteButton productId={product.id} /></div>
+
       <div className="relative z-10">
         <div className="w-full aspect-square bg-slate-50 overflow-hidden rounded-[24px] mb-4 border border-slate-50">
           <img
             src={product.images?.[0] || product.image || "https://via.placeholder.com/300?text=Hardware"}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
           />
         </div>
 

@@ -10,19 +10,7 @@ import SuccessModal from '../components/Checkout/Step2/SuccessModal';
 import { useCart } from '../context/CartContext';
 import { addDoc, collection, deleteDoc, doc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
-
-const initialAddressForm = {
-  firstName: '', lastName: '', phone: '', gender: '', street: '', exteriorNumber: '',
-  interiorNumber: '', neighborhood: '', postalCode: '', city: '', state: '', references: '',
-};
-
-const mexicanStates = [
-  'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche', 'Chiapas', 'Chihuahua',
-  'Ciudad de México', 'Coahuila', 'Colima', 'Durango', 'Estado de México', 'Guanajuato',
-  'Guerrero', 'Hidalgo', 'Jalisco', 'Michoacán', 'Morelos', 'Nayarit', 'Nuevo León', 'Oaxaca',
-  'Puebla', 'Querétaro', 'Quintana Roo', 'San Luis Potosí', 'Sinaloa', 'Sonora', 'Tabasco',
-  'Tamaulipas', 'Tlaxcala', 'Veracruz', 'Yucatán', 'Zacatecas',
-];
+import { initialAddressForm, mexicanStates } from '../data/addressData';
 
 const CheckoutAddress = () => {
   const navigate = useNavigate();

@@ -1,13 +1,18 @@
 import React from "react";
 import { signInWithPopup } from "firebase/auth";
+import { useLocation, useNavigate } from "react-router-dom";
 import { auth, googleProvider } from "/src/firebaseConfig.js";
 import logoStore from "/src/assets/logof.png"; 
 import googleIcon from "/src/assets/google-icon.svg"; 
 
 const Login = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const handleGoogleSignIn = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
+      navigate(location.state?.from || '/', { replace: true });
     } catch (error) {
       console.error("Error:", error.message);
     }

@@ -36,7 +36,7 @@ const OrderHistoryCard = ({ order }) => {
       </div>
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          {products.slice(0, 4).map((product, index) => <div key={`${product.id || product.name}-${index}`} className="relative shrink-0"><img src={product.image} alt={product.name || 'Producto'} className="h-12 w-12 rounded-xl border-2 border-white bg-slate-100 object-cover shadow-sm" /><span className="absolute -right-1 -top-1 rounded-full bg-slate-900 px-1.5 py-0.5 text-[9px] font-black text-white">×{product.quantity}</span></div>)}
+          {products.slice(0, 4).map((product, index) => <div key={`${product.id || product.name}-${index}`} className="relative shrink-0"><img src={product.images?.[0] || product.image || 'https://via.placeholder.com/300?text=FIRSTPC'} alt={product.name || 'Producto'} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = 'https://via.placeholder.com/300?text=FIRSTPC'; }} className="h-12 w-12 rounded-xl border-2 border-white bg-slate-100 object-cover shadow-sm" /><span className="absolute -right-1 -top-1 rounded-full bg-slate-900 px-1.5 py-0.5 text-[9px] font-black text-white">×{product.quantity}</span></div>)}
           {products.length > 4 && <span className="ml-3 text-xs font-bold text-slate-400">+{products.length - 4} más</span>}
           {!products.length && <span className="text-xs font-semibold text-slate-400">Sin productos registrados</span>}
         </div>

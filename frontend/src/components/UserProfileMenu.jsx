@@ -94,6 +94,9 @@ const UserProfileMenu = ({ user, onSignOut }) => {
                 onClick={() => {
                   setIsOpen(false);
                   if (item === 'Mis compras') navigate('/perfil/compras');
+                  if (item === 'Mis favoritos') navigate('/perfil/favoritos');
+                  if (item === 'Mis datos de envío') navigate('/perfil/envio');
+                  if (item === 'Datos de pago y facturación') navigate('/perfil/facturacion');
                 }}
               >
                 <span>{item}</span>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
-import { getDownloadURL, listAll, ref, uploadBytes } from 'firebase/storage';
+import { deleteObject, getDownloadURL, listAll, ref, uploadBytes } from 'firebase/storage';
 import { db, storage } from '../firebaseConfig';
 
 const EMPTY_FORM = {
@@ -54,6 +54,7 @@ export const useAdvancedProductForm = (initialProduct, isOpen, onClose, onAction
   const [keySpecRows, setKeySpecRows] = useState(() => normalizeRows(initialProduct?.keySpecs));
   const [fullSpecRows, setFullSpecRows] = useState(() => normalizeFullSpecs(initialProduct?.fullSpecs));
   const [existingImages, setExistingImages] = useState(() => initialProduct?.images || (initialProduct?.image ? [initialProduct.image] : []));
+  const [deletedImages, setDeletedImages] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -67,6 +68,7 @@ export const useAdvancedProductForm = (initialProduct, isOpen, onClose, onAction
     setKeySpecRows(normalizeRows(initialProduct?.keySpecs));
     setFullSpecRows(normalizeFullSpecs(initialProduct?.fullSpecs));
     setExistingImages(initialProduct?.images || (initialProduct?.image ? [initialProduct.image] : []));
+    setDeletedImages([]);
     setSelectedFiles([]); setErrorMessage('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, [isOpen, initialProduct]);
@@ -118,12 +120,22 @@ export const useAdvancedProductForm = (initialProduct, isOpen, onClose, onAction
       };
       if (isEditMode) await updateDoc(doc(db, 'products', initialProduct.id), dataToSave);
       else await addDoc(collection(db, 'products'), dataToSave);
+      await Promise.all(deletedImages.map(async (image) => {
+        try {
+          await deleteObject(ref(storage, image));
+        } catch (error) {
+          if (error?.code !== 'storage/object-not-found') throw error;
+        }
+      }));
       onActionSuccess?.(); onClose();
     } catch (error) { console.error('Error guardando producto:', error); setErrorMessage(error?.message || 'No se pudo guardar el producto.'); }
     finally { setLoading(false); }
   };
 
-  const removeExistingImage = (image) => setExistingImages((images) => images.filter((item) => item !== image));
+  const removeExistingImage = (image) => {
+    setExistingImages((images) => images.filter((item) => item !== image));
+    setDeletedImages((images) => images.includes(image) ? images : [...images, image]);
+  };
   const moveItem = (items, index, direction) => {
     const targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= items.length) return items;
