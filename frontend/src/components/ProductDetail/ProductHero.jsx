@@ -51,7 +51,7 @@ const ProductHero = ({ product, onAddToCart }) => {
 
       <div className="space-y-6 pt-2">
         <div>
-          <p className="mb-3 text-xs font-bold uppercase tracking-[.18em] text-slate-400">{product.brand} · SKU {product.sku || 'No disponible'}</p>
+          <p className="mb-3 text-xs font-bold uppercase tracking-[.18em] text-slate-400">{product.brand} · SKU {product.sku || 'No disponible'}{product.mpn ? ` · MPN ${product.mpn}` : ''}</p>
           <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-900 md:text-3xl">{product.name}</h1>
           <div className="mt-4 flex items-center gap-2 text-sm"><span className="text-lg tracking-widest text-amber-400">★★★★★</span><span className="font-black text-slate-700">{product.rating ?? '—'}</span><span className="font-semibold text-slate-400">({product.reviewsCount || 0} opiniones)</span></div>
         </div>

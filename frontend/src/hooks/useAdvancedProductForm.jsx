@@ -4,7 +4,7 @@ import { deleteObject, getDownloadURL, listAll, ref, uploadBytes } from 'firebas
 import { db, storage } from '../firebaseConfig';
 
 const EMPTY_FORM = {
-  name: '', brand: '', sku: '', category: 'procesadores', price: '', stock: '',
+  name: '', brand: '', sku: '', mpn: '', category: 'procesadores', price: '', stock: '',
   brandAboutText: '', descriptionTitle: '', descriptionContent: '',
 };
 
@@ -43,7 +43,7 @@ const createInitialState = (product) => ({
   ...EMPTY_FORM,
   sku: product?.sku || generateSku(),
   ...(product ? {
-    name: product.name || '', brand: product.brand || '', category: product.category || 'procesadores',
+    name: product.name || '', brand: product.brand || '', mpn: product.mpn || '', category: product.category || 'procesadores',
     price: product.price ?? '', stock: product.stock ?? '', brandAboutText: product.brandAboutText || '',
     descriptionTitle: product.description?.title || '', descriptionContent: product.description?.content || product.description?.intro || product.description || '',
   } : {}),
@@ -114,7 +114,7 @@ export const useAdvancedProductForm = (initialProduct, isOpen, onClose, onAction
       const keySpecs = Object.fromEntries(keySpecRows.filter((row) => row.key.trim()).map((row) => [row.key.trim(), row.value.trim()]));
       const fullSpecs = Object.fromEntries(fullSpecRows.filter((group) => group.category.trim()).map((group) => [group.category.trim(), Object.fromEntries(group.fields.filter((row) => row.key.trim()).map((row) => [row.key.trim(), row.value.trim()]))]));
       const dataToSave = {
-        name: formData.name.trim(), brand: formData.brand.trim(), category: formData.category, sku: formData.sku.trim() || generateSku(), price: Number(formData.price), stock: Number(formData.stock),
+        name: formData.name.trim(), brand: formData.brand.trim(), category: formData.category, sku: formData.sku.trim() || generateSku(), mpn: formData.mpn.trim(), price: Number(formData.price), stock: Number(formData.stock),
         rating: Number(initialProduct?.rating) || 0, reviewsCount: Number(initialProduct?.reviewsCount) || 0, brandLogo, brandAboutText: formData.brandAboutText.trim(),
         images: [...existingImages, ...uploadedImages], description: { title: formData.descriptionTitle.trim(), content: formData.descriptionContent.trim() }, keySpecs, fullSpecs,
       };

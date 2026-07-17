@@ -97,6 +97,7 @@ const UserProfileMenu = ({ user, onSignOut }) => {
                   if (item === 'Mis favoritos') navigate('/perfil/favoritos');
                   if (item === 'Mis datos de envío') navigate('/perfil/envio');
                   if (item === 'Datos de pago y facturación') navigate('/perfil/facturacion');
+                  if (item === 'Mis PCs configuradas') navigate('/perfil/pc-configuradas');
                 }}
               >
                 <span>{item}</span>

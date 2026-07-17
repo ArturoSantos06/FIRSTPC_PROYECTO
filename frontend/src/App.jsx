@@ -15,6 +15,7 @@ import AdminRoutes from './components/AdminRoutes';
 import ProductDetailPage from './pages/ProductDetailPage';
 import ProfileShippingAddresses from './pages/ProfileShippingAddresses';
 import ProfileBilling from './pages/ProfileBilling';
+import PCBuilder from './components/PCBuilder/PCBuilder';
 
 function App() {
   const { user, loading } = useContext(AuthContext);
@@ -36,6 +37,16 @@ function App() {
         />
 
         <Route path="/" element={<Home />} />
+
+        <Route
+          path="/armar-pc"
+          element={
+            <div className="min-h-screen bg-slate-50 pt-28">
+              <Navbar />
+              <PCBuilder />
+            </div>
+          }
+        />
 
         <Route path="/producto/:id" element={<ProductDetailPage />} />
         
@@ -163,6 +174,20 @@ function App() {
                 <Navbar />
                 <div className="mx-auto w-full max-w-7xl">
                   <ProfileBilling />
+                </div>
+              </div>
+            ) : <Navigate to="/login" replace />
+          }
+        />
+
+        <Route
+          path="/perfil/pc-configuradas"
+          element={
+            user ? (
+              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
+                <Navbar />
+                <div className="mx-auto w-full max-w-7xl">
+                  <UserProfile initialTab="configurations" />
                 </div>
               </div>
             ) : <Navigate to="/login" replace />

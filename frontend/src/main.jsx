@@ -5,13 +5,16 @@ import './index.css'
 import { AuthProvider } from './context/AuthProvider.jsx';
 import { CartProvider } from './context/CartProvider.jsx';
 import { FavoritesProvider } from './hooks/useFavorites.jsx';
+import { PCBuilderProvider } from './context/PCBuilderProvider.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
       <CartProvider>
         <FavoritesProvider>
-          <App />
+          <PCBuilderProvider>
+            <App />
+          </PCBuilderProvider>
         </FavoritesProvider>
       </CartProvider>
     </AuthProvider>

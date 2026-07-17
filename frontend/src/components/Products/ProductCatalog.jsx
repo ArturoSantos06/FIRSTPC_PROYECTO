@@ -1,7 +1,8 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { collection, deleteDoc, doc, getDocs } from "firebase/firestore";
-import { db } from "/src/firebaseConfig.js";
+import { deleteObject, ref } from "firebase/storage";
+import { db, storage } from "/src/firebaseConfig.js";
 import ProductCard from "./ProductCard";
 import AddProductModal from "./AddProductModal"; 
 import { AuthContext } from "../../context/AuthContext";
@@ -31,6 +32,21 @@ const normalizeCategory = (value) =>
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+
+const getProductImages = (product) => [
+  ...(Array.isArray(product?.images) ? product.images : []),
+  product?.image,
+].filter(Boolean).filter((image, index, images) => images.indexOf(image) === index);
+
+const deleteProductImages = async (product) => {
+  await Promise.all(getProductImages(product).map(async (image) => {
+    try {
+      await deleteObject(ref(storage, image));
+    } catch (error) {
+      if (!['storage/object-not-found', 'storage/invalid-url'].includes(error?.code)) throw error;
+    }
+  }));
+};
 
 const ProductCatalog = () => {
   const { user } = useContext(AuthContext);
@@ -199,6 +215,7 @@ const ProductCatalog = () => {
     setIsDeleting(true);
     setDeleteError("");
     try {
+      await deleteProductImages(productToDelete);
       await deleteDoc(doc(db, "products", productToDelete.id));
       setProductToDelete(null);
       setIsEditModalOpen(false);

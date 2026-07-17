@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useState } from 'react';
+import { useContext, useCallback, useState } from 'react';
 import logoStore from '../assets/logof.png';
 import { Link, useNavigate } from 'react-router-dom';
 import { signOut } from "firebase/auth";
@@ -46,6 +46,7 @@ const Navbar = () => {
     { name: "Catalogo", path: "/admin" },
     { name: "Inventario", path: "/admin/inventario" },
     { name: "Garantías (RMA)", path: "/admin/rma" },
+    { name: "Armar PC", path: "/armar-pc" },
   ];
 
   const navLinks = user?.role === 'admin' ? adminNavLinks : clientNavLinks;
