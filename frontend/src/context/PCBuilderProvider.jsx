@@ -14,6 +14,12 @@ export const PC_BUILDER_CATEGORIES = [
   "additionalStorage",
 ];
 
+const DEPENDENCIES_BY_CATEGORY = {
+  cpu: ["motherboard", "ram", "additionalRam"],
+  motherboard: ["ram", "additionalRam"],
+  ram: ["additionalRam"],
+};
+
 const INITIAL_COMPONENTS = PC_BUILDER_CATEGORIES.reduce(
   (components, category) => ({ ...components, [category]: null }),
   {}
@@ -28,11 +34,8 @@ export function PCBuilderProvider({ children }) {
 
     setSelectedComponents((current) => {
       const next = { ...current, [category]: product };
-      const categoryIndex = PC_BUILDER_CATEGORIES.indexOf(category);
-
-      // Al cambiar una pieza base, las posteriores pueden dejar de ser compatibles.
-      PC_BUILDER_CATEGORIES.slice(categoryIndex + 1).forEach((laterCategory) => {
-        next[laterCategory] = null;
+      (DEPENDENCIES_BY_CATEGORY[category] || []).forEach((dependentCategory) => {
+        next[dependentCategory] = null;
       });
       return next;
     });

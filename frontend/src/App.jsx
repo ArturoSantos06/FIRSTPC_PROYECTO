@@ -16,6 +16,8 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import ProfileShippingAddresses from './pages/ProfileShippingAddresses';
 import ProfileBilling from './pages/ProfileBilling';
 import PCBuilder from './components/PCBuilder/PCBuilder';
+import RecommendationWizard from './components/RecommendationWizard/RecommendationWizard';
+
 
 function App() {
   const { user, loading } = useContext(AuthContext);
@@ -41,12 +43,14 @@ function App() {
         <Route
           path="/armar-pc"
           element={
-            <div className="min-h-screen bg-slate-50 pt-28">
+            <div className="min-h-screen bg-slate-50 pt-28 [&_.bg-slate-900]:!bg-white [&_.bg-slate-900]:!text-slate-800 [&_.bg-slate-900_.text-white]:!text-slate-800 [&_button.bg-slate-900]:!border [&_button.bg-slate-900]:!border-slate-300 [&_button.bg-slate-900]:!bg-white [&_button.bg-slate-900]:!text-slate-700 [&_button.bg-slate-900:hover]:!border-emerald-400 [&_button.bg-slate-900:hover]:!bg-emerald-50 [&_button.bg-slate-900:hover]:!text-emerald-700 [&_.bg-amber-50]:!hidden [&_button.text-slate-600]:!hidden [&_button.border:disabled]:!hidden">
               <Navbar />
               <PCBuilder />
             </div>
           }
         />
+
+        <Route path="/recomendador" element={<RecommendationWizard />} />
 
         <Route path="/producto/:id" element={<ProductDetailPage />} />
         
@@ -204,6 +208,7 @@ function App() {
               </div>
             } 
           />
+          <Route path="/admin/recomendador-settings" element={<RecommendationWizard />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" />} />

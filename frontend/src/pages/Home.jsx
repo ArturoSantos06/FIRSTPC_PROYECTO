@@ -1,10 +1,10 @@
-import React from 'react';
 import Navbar from '../components/Navbar';
 import Hero from '../components/home/Hero';
 import Features from '../components/home/Features';
 import CategoryGrid from '../components/home/CategoryGrid';
 import Footer from '../components/home/Footer';
 import FirstPurchaseBanner from '../components/Home/FirstPurchaseBanner';
+import RecommendationBanner from '../components/Home/RecommendationBanner';
 
 const Home = () => {
   return (
@@ -12,8 +12,9 @@ const Home = () => {
       <Navbar />
       <Hero />
       <CategoryGrid />
-      <FirstPurchaseBanner />
+      <RecommendationBanner />
       <Features />
+      <FirstPurchaseBanner />
       <Footer />
     </main>
   );
