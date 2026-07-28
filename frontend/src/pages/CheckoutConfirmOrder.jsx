@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { addDoc, collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore';
+import { collection, doc, getDocs, query, runTransaction, serverTimestamp, where } from 'firebase/firestore';
 import CheckoutLayout from '../components/Checkout/common/CheckoutLayout';
 import OrderSummary from '../components/Checkout/common/OrderSummary';
 import ReceiptPdf from '../components/Checkout/Step4/ReceiptPdf';
@@ -95,14 +95,45 @@ const CheckoutConfirmOrder = () => {
       status: selectedPaymentMethod === 'oxxo' ? 'Pendiente de pago' : 'Procesado',
     };
     try {
-      const document = await addDoc(collection(db, 'orders'), orderData);
-      const createdOrder = { id: document.id, ...orderData, createdAt };
+      const orderReference = doc(collection(db, 'orders'));
+      await runTransaction(db, async (transaction) => {
+        const productReferences = cartItems
+          .filter((item) => !item.id?.startsWith('firstpc-assembly-service'))
+          .map((item) => doc(db, 'products', item.id));
+        const productSnapshots = await Promise.all(productReferences.map((reference) => transaction.get(reference)));
+        const stockChanges = [];
+
+        productSnapshots.forEach((productSnapshot, index) => {
+          const item = cartItems.filter((cartItem) => !cartItem.id?.startsWith('firstpc-assembly-service'))[index];
+          if (!productSnapshot.exists()) {
+            throw new Error(`PRODUCT_NOT_FOUND:${item.name || item.id}`);
+          }
+
+          const currentStock = Number(productSnapshot.data().stock) || 0;
+          const quantity = Number(item.quantity) || 0;
+          if (currentStock < quantity) {
+            throw new Error(`INSUFFICIENT_STOCK:${item.name || 'Producto'}`);
+          }
+          stockChanges.push({ reference: productSnapshot.ref, stock: currentStock - quantity });
+        });
+
+        stockChanges.forEach(({ reference, stock }) => transaction.update(reference, { stock }));
+        transaction.set(orderReference, orderData);
+      });
+
+      const createdOrder = { id: orderReference.id, ...orderData, createdAt };
       setOrder(createdOrder);
       clearCart();
       simulateReceiptEmail(createdOrder);
     } catch (saveError) {
       console.error('Error al crear el pedido:', saveError);
-      setError('No fue posible procesar el pedido. Intenta nuevamente.');
+      if (saveError?.message?.startsWith('INSUFFICIENT_STOCK:')) {
+        setError(`No hay stock suficiente para ${saveError.message.replace('INSUFFICIENT_STOCK:', '')}. Regresa al carrito y actualiza la cantidad.`);
+      } else if (saveError?.message?.startsWith('PRODUCT_NOT_FOUND:')) {
+        setError('Uno de los productos del carrito ya no está disponible. Regresa al catálogo e inténtalo nuevamente.');
+      } else {
+        setError('No fue posible procesar el pedido. Intenta nuevamente.');
+      }
     } finally { setIsProcessing(false); }
   };
 

@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { useAdvancedProductForm } from '../../hooks/useAdvancedProductForm';
 
-const CATEGORIES = ['procesadores', 'graficas', 'tarjetas madre', 'gabinetes', 'enfriamiento', 'ram', 'almacenamiento', 'fuentes', 'monitores', 'computadora', 'perifericos', 'audio'];
+const CATEGORIES = ['procesadores', 'graficas', 'tarjetas madre', 'gabinetes', 'enfriamiento', 'ram', 'almacenamiento', 'fuentes', 'monitores', 'computadora', 'teclados', 'mouses', 'audio'];
 const input = 'w-full rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 outline-none transition duration-200 focus:border-emerald-400 focus:bg-white';
 const label = 'mb-1 block pl-1 text-[11px] font-black uppercase tracking-wider text-slate-400';
 const Field = ({ name, children }) => <label className="block"><span className={label}>{name}</span>{children}</label>;

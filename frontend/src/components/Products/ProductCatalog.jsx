@@ -22,7 +22,8 @@ const CATEGORY_ALIASES = {
   "tarjetas-madre": ["tarjetas-madre", "tarjetas madre"],
   "memorias-ram": ["memorias-ram", "memorias ram", "ram"],
   "fuentes-de-poder": ["fuentes-de-poder", "fuentes de poder", "fuentes"],
-  "teclados-mouses": ["teclados-mouses", "teclados y mouses", "perifericos", "periféricos"],
+  teclados: ["teclados", "teclado"],
+  mouses: ["mouses", "mouse", "raton", "ratón"],
   "audifonos-gaming": ["audifonos-gaming", "audífonos gaming", "audio"],
 };
 

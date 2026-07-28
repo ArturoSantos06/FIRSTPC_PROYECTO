@@ -9,7 +9,8 @@ export const CATEGORIES = [
   { id: "fuentes-de-poder", label: "Fuentes de Poder", icon: "PSU" },
   { id: "monitores", label: "Monitores", icon: "MON" },
   { id: "computadora", label: "Computadoras", icon: "PC" },
-  { id: "teclados-mouses", label: "Teclados y Mouses", icon: "IO" },
+  { id: "teclados", label: "Teclados", icon: "IO" },
+  { id: "mouses", label: "Mouses", icon: "IO" },
   { id: "audifonos-gaming", label: "Audífonos Gaming", icon: "AUX" },
 ];
 

@@ -24,8 +24,9 @@ const categories = [
   { id: 8, name: 'Fuentes de Poder', slug: 'fuentes-de-poder', img: psuImg },
   { id: 9, name: 'Monitores', slug: 'monitores', img: monitorImg },
   { id: 10, name: 'Computadora', slug: 'computadora', img: computdoraImg },
-  { id: 11, name: 'Teclados y Mouses', slug: 'teclados-mouses', img: peripheralsImg },
-  { id: 12, name: 'Audífonos Gaming', slug: 'audifonos-gaming', img: audioImg },
+  { id: 11, name: 'Teclados', slug: 'teclados', img: peripheralsImg },
+  { id: 12, name: 'Mouses', slug: 'mouses', img: peripheralsImg },
+  { id: 13, name: 'Audífonos Gaming', slug: 'audifonos-gaming', img: audioImg },
 ];
 
 const CategoryCard = ({ name, slug, img }) => (

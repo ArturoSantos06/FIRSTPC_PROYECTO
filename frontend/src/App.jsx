@@ -17,6 +17,7 @@ import ProfileShippingAddresses from './pages/ProfileShippingAddresses';
 import ProfileBilling from './pages/ProfileBilling';
 import PCBuilder from './components/PCBuilder/PCBuilder';
 import RecommendationWizard from './components/RecommendationWizard/RecommendationWizard';
+import AdminInventory from './pages/AdminInventory';
 
 
 function App() {
@@ -209,6 +210,7 @@ function App() {
             } 
           />
           <Route path="/admin/recomendador-settings" element={<RecommendationWizard />} />
+          <Route path="/admin/inventario" element={<AdminInventory />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" />} />
