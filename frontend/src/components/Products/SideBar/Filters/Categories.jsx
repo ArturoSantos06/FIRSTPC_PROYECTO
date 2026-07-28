@@ -6,21 +6,13 @@ const ProductCatalogSidebarCategories = ({ categories, selectedCategory, onCateg
       <div className="flex items-center justify-between gap-3">
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[0.32em] text-slate-400">Categorías</label>
-          <p className="mt-1 text-xs text-slate-500">12 familias del inventario.</p>
+          <p className="mt-1 text-xs text-slate-500">{categories.length} familias del inventario.</p>
         </div>
-
-        <button
-          type="button"
-          onClick={() => onCategoryChange("")}
-          className="text-[11px] font-bold uppercase tracking-[0.28em] text-emerald-600 transition hover:text-emerald-700"
-        >
-          Todo
-        </button>
       </div>
 
       <div className="mt-4 space-y-2">
         {categories.map((category) => {
-          const isActive = selectedCategory === category.id;
+          const isActive = selectedCategory.includes(category.id);
 
           return (
             <button

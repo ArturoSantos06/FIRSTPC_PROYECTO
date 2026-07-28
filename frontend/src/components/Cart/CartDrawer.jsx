@@ -9,7 +9,7 @@ const moneyFormatter = new Intl.NumberFormat('es-MX', {
 });
 
 const CartDrawer = ({ isOpen, onClose }) => {
-  const { cartItems, totalItems, totalAmount, updateQuantity, removeItem } = useCart();
+  const { cartItems, totalItems, totalAmount, updateQuantity, removeItem, clearCart } = useCart();
 
   if (!isOpen) {
     return null;
@@ -118,6 +118,14 @@ const CartDrawer = ({ isOpen, onClose }) => {
               >
                 Ver carrito
               </Link>
+              <button
+                type="button"
+                onClick={clearCart}
+                disabled={cartItems.length === 0}
+                className="flex-1 rounded-full border border-rose-200 bg-rose-50 py-2.5 text-center text-xs font-bold text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Vaciar carrito
+              </button>
             </div>
           </div>
         </div>

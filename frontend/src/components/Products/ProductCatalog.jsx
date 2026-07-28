@@ -54,7 +54,7 @@ const ProductCatalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get("categoria") || "");
+  const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get("categoria")?.split(",").filter(Boolean) || []);
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [sortOrder, setSortOrder] = useState("featured");
   const [priceMin, setPriceMin] = useState("");
@@ -111,7 +111,7 @@ const ProductCatalog = () => {
       .map(([value, metadata]) => ({ value, ...metadata }))
       .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
 
-    return [...prioritized, ...remaining].slice(0, 10);
+    return [...prioritized, ...remaining];
   }, [products]);
 
   const filteredProducts = useMemo(() => {
@@ -138,9 +138,8 @@ const ProductCatalog = () => {
         productCategory.includes(normalizedSearch) ||
         productDescription.includes(normalizedSearch);
 
-      const categoryOptions = CATEGORY_ALIASES[selectedCategory] || [selectedCategory];
-      const matchesCategory = selectedCategory
-        ? categoryOptions.some((category) => normalizeCategory(category) === normalizeCategory(productCategory))
+      const matchesCategory = selectedCategory.length > 0
+        ? selectedCategory.some((selected) => (CATEGORY_ALIASES[selected] || [selected]).some((category) => normalizeCategory(category) === normalizeCategory(productCategory)))
         : true;
       const matchesBrands = activeBrands.size > 0 ? activeBrands.has(product.brand?.trim().toUpperCase()) : true;
       const matchesPrice = productPrice >= minValue && productPrice <= maxValue;
@@ -161,7 +160,7 @@ const ProductCatalog = () => {
 
   const resetFilters = () => {
     setSearch("");
-    setSelectedCategory("");
+    setSelectedCategory([]);
     setSelectedBrands([]);
     setSortOrder("featured");
     setPriceMin("");
@@ -170,15 +169,20 @@ const ProductCatalog = () => {
   };
 
   useEffect(() => {
-    setSelectedCategory(searchParams.get("categoria") || "");
+    setSelectedCategory(searchParams.get("categoria")?.split(",").filter(Boolean) || []);
   }, [searchParams]);
 
   const handleCategoryChange = (category) => {
-    setSelectedCategory(category);
-    const nextParams = new URLSearchParams(searchParams);
-    if (category) nextParams.set("categoria", category);
-    else nextParams.delete("categoria");
-    setSearchParams(nextParams, { replace: true });
+    setSelectedCategory((currentCategories) => {
+      const nextCategories = currentCategories.includes(category)
+        ? currentCategories.filter((currentCategory) => currentCategory !== category)
+        : [...currentCategories, category];
+      const nextParams = new URLSearchParams(searchParams);
+      if (nextCategories.length > 0) nextParams.set("categoria", nextCategories.join(","));
+      else nextParams.delete("categoria");
+      setSearchParams(nextParams, { replace: true });
+      return nextCategories;
+    });
   };
 
   const toggleBrand = (brand) => {

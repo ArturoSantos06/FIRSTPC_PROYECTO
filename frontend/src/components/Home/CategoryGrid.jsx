@@ -67,7 +67,7 @@ const CategoryGrid = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:[&>*:last-child:nth-child(4n+1)]:col-start-2 lg:[&>*:last-child:nth-child(4n+1)]:translate-x-1/2">
           {categories.map((cat) => (
             <CategoryCard key={cat.id} {...cat} />
           ))}

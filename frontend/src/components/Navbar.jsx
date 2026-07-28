@@ -1,6 +1,6 @@
 import { useContext, useCallback, useState } from 'react';
 import logoStore from '../assets/logof.png';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from "firebase/auth";
 import { auth } from "/src/firebaseConfig.js"; 
 import { AuthContext } from '../context/AuthContext';
@@ -24,6 +24,7 @@ const Navbar = () => {
   const { user } = useContext(AuthContext);
   const { totalItems } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
 
   const handleSignOut = useCallback(async () => {
@@ -43,6 +44,7 @@ const Navbar = () => {
   ];
 
   const adminNavLinks = [
+    { name: "Inicio", path: "/" },
     { name: "Catalogo", path: "/admin" },
     { name: "Inventario", path: "/admin/inventario" },
     { name: "Garantías (RMA)", path: "/admin/rma" },
@@ -50,6 +52,9 @@ const Navbar = () => {
   ];
 
   const navLinks = user?.role === 'admin' ? adminNavLinks : clientNavLinks;
+  const activeLink = [...navLinks]
+    .sort((left, right) => right.path.length - left.path.length)
+    .find((link) => location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(`${link.path}/`)))?.path;
 
   return (
     <header className="fixed top-4 left-0 right-0 z-50 font-['Montserrat'] mx-auto max-w-[1200px] w-[calc(100%-2rem)] px-4">
@@ -76,7 +81,11 @@ const Navbar = () => {
             <ul className="flex items-center space-x-6 lg:space-x-8">
               {navLinks.map((link, index) => (
                 <li key={index}>
-                  <Link to={link.path} className="text-sm font-semibold text-slate-700 hover:text-[#10B981] transition-colors duration-200 whitespace-nowrap">
+                  <Link
+                    to={link.path}
+                    aria-current={activeLink === link.path ? 'page' : undefined}
+                    className={`whitespace-nowrap text-sm font-semibold transition-colors duration-200 ${activeLink === link.path ? 'text-[#10B981]' : 'text-slate-700 hover:text-[#10B981]'}`}
+                  >
                     {link.name}
                   </Link>
                 </li>
