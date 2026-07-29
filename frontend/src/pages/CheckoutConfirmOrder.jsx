@@ -1,29 +1,17 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useState } from 'react';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { collection, doc, getDocs, query, runTransaction, serverTimestamp, where } from 'firebase/firestore';
 import CheckoutLayout from '../components/Checkout/common/CheckoutLayout';
+import ConfirmOrderView from '../components/Checkout/ConfirmOrderView';
 import OrderSummary from '../components/Checkout/common/OrderSummary';
-import ReceiptPdf from '../components/Checkout/Step4/ReceiptPdf';
 import { useCart } from '../context/CartContext';
 import { auth, db } from '../firebaseConfig';
+import { createCheckoutOrder } from '../services/checkoutOrderService';
 import { shippingOptions } from '../components/Checkout/Step3/ShippingOptions';
 
-const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 const IVA_RATE = 0.16;
-
 const paymentLabels = { card: 'Tarjeta de débito o crédito', paypal: 'PayPal', oxxo: 'OXXO' };
-
-const Section = ({ eyebrow, title, children }) => (
-  <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-emerald-500">{eyebrow}</p>
-    <h3 className="mt-2 text-lg font-black text-slate-900">{title}</h3>
-    <div className="mt-4">{children}</div>
-  </section>
-);
-
-const Detail = ({ label, children }) => (
-  <div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p><p className="mt-1 text-sm font-bold text-slate-700">{children || '—'}</p></div>
-);
 
 const CheckoutConfirmOrder = () => {
   const navigate = useNavigate();
@@ -41,14 +29,14 @@ const CheckoutConfirmOrder = () => {
   const selectedPaymentMethod = state?.selectedPaymentMethod || 'card';
   const shipping = shippingOptions.find((option) => option.id === selectedShipping) || shippingOptions[0];
   const shippingCost = cartItems.length ? shipping.price : 0;
-  const subtotalWithShipping = totalAmount + shippingCost;
   const ivaAmount = totalAmount * (IVA_RATE / (1 + IVA_RATE));
-  const orderTotal = subtotalWithShipping;
+  const orderTotal = totalAmount + shippingCost;
 
   useEffect(() => {
     const loadCheckoutData = async () => {
       const userId = auth.currentUser?.uid;
       if (!userId) { setIsLoading(false); return; }
+
       try {
         const [addressesSnapshot, billingSnapshot] = await Promise.all([
           getDocs(query(collection(db, 'addresses'), where('userId', '==', userId))),
@@ -60,15 +48,13 @@ const CheckoutConfirmOrder = () => {
       } catch (loadError) {
         console.error('Error al cargar los datos del checkout:', loadError);
         setError('No fue posible cargar la información del pedido.');
-      } finally { setIsLoading(false); }
+      } finally {
+        setIsLoading(false);
+      }
     };
+
     loadCheckoutData();
-  }, []);
-
-  const paymentName = paymentLabels[selectedPaymentMethod] || 'Tarjeta';
-  const cardLabel = 'Tarjeta seleccionada';
-
-  const orderNumber = order?.orderNumber;
+  }, [state?.selectedAddressId]);
 
   const simulateReceiptEmail = (createdOrder) => {
     setEmailQueued(true);
@@ -77,104 +63,80 @@ const CheckoutConfirmOrder = () => {
 
   const handleConfirm = async () => {
     if (isProcessing || !cartItems.length || !auth.currentUser?.uid) return;
-    setIsProcessing(true); setError('');
-    const createdAt = new Date();
-    const orderData = {
-      userId: auth.currentUser.uid,
-      orderNumber: `FPC-${createdAt.getTime().toString(36).toUpperCase()}-${Math.floor(Math.random() * 900 + 100)}`,
-    products: cartItems.map(({ id, name, title, images, image, price, quantity }) => ({ id, name: name || title || 'Producto', image: images?.[0] || image || '', price: Number(price) || 0, quantity })),
-      shipping: { carrier: shipping.name, id: shipping.id, cost: shippingCost, address },
-      billing: billing || { note: 'Factura de público general con RFC genérico' },
-      paymentMethod: selectedPaymentMethod,
-      subtotal: totalAmount,
-      ivaRate: IVA_RATE,
-      ivaAmount,
-      shippingCost,
-      totalPaid: orderTotal,
-      createdAt: serverTimestamp(),
-      status: selectedPaymentMethod === 'oxxo' ? 'Pendiente de pago' : 'Procesado',
-    };
+    setIsProcessing(true);
+    setError('');
+
     try {
-      const orderReference = doc(collection(db, 'orders'));
-      await runTransaction(db, async (transaction) => {
-        const productReferences = cartItems
-          .filter((item) => !item.id?.startsWith('firstpc-assembly-service'))
-          .map((item) => doc(db, 'products', item.id));
-        const productSnapshots = await Promise.all(productReferences.map((reference) => transaction.get(reference)));
-        const stockChanges = [];
-
-        productSnapshots.forEach((productSnapshot, index) => {
-          const item = cartItems.filter((cartItem) => !cartItem.id?.startsWith('firstpc-assembly-service'))[index];
-          if (!productSnapshot.exists()) {
-            throw new Error(`PRODUCT_NOT_FOUND:${item.name || item.id}`);
-          }
-
-          const currentStock = Number(productSnapshot.data().stock) || 0;
-          const quantity = Number(item.quantity) || 0;
-          if (currentStock < quantity) {
-            throw new Error(`INSUFFICIENT_STOCK:${item.name || 'Producto'}`);
-          }
-          stockChanges.push({ reference: productSnapshot.ref, stock: currentStock - quantity });
-        });
-
-        stockChanges.forEach(({ reference, stock }) => transaction.update(reference, { stock }));
-        transaction.set(orderReference, orderData);
+      const createdOrder = await createCheckoutOrder({
+        cartItems,
+        address,
+        billing,
+        shipping,
+        selectedPaymentMethod,
+        totalAmount,
+        shippingCost,
+        ivaAmount,
+        orderTotal,
+        userId: auth.currentUser.uid,
       });
-
-      const createdOrder = { id: orderReference.id, ...orderData, createdAt };
       setOrder(createdOrder);
       clearCart();
       simulateReceiptEmail(createdOrder);
     } catch (saveError) {
       console.error('Error al crear el pedido:', saveError);
-      if (saveError?.message?.startsWith('INSUFFICIENT_STOCK:')) {
-        setError(`No hay stock suficiente para ${saveError.message.replace('INSUFFICIENT_STOCK:', '')}. Regresa al carrito y actualiza la cantidad.`);
-      } else if (saveError?.message?.startsWith('PRODUCT_NOT_FOUND:')) {
+      if (saveError?.message?.startsWith('PRODUCT_NOT_FOUND:')) {
         setError('Uno de los productos del carrito ya no está disponible. Regresa al catálogo e inténtalo nuevamente.');
+      } else if (saveError?.message?.startsWith('INSUFFICIENT_STOCK:')) {
+        setError(`No hay stock suficiente ni integración de distribuidor para ${saveError.message.replace('INSUFFICIENT_STOCK:', '')}.`);
       } else {
-        setError('No fue posible procesar el pedido. Intenta nuevamente.');
+        setError('No fue posible procesar el pedido con el distribuidor. Intenta nuevamente.');
       }
-    } finally { setIsProcessing(false); }
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
-    <>
     <CheckoutLayout
       currentStep={4}
       title="Confirmar pedido"
       description="Revisa tu información antes de finalizar la compra."
-      summary={<OrderSummary totalItems={totalItems} uniqueProducts={cartItems.length} totalAmount={totalAmount} shippingCost={shippingCost} ivaAmount={ivaAmount} showShipping buttonText={isProcessing ? 'Procesando...' : 'Confirmar y Pagar'} onProceed={handleConfirm} isReadyToProceed={!isLoading && Boolean(address) && cartItems.length > 0 && !isProcessing} />}
+      summary={(
+        <OrderSummary
+          totalItems={totalItems}
+          uniqueProducts={cartItems.length}
+          totalAmount={totalAmount}
+          shippingCost={shippingCost}
+          ivaAmount={ivaAmount}
+          showShipping
+          buttonText={isProcessing ? 'Procesando con distribuidor...' : 'Confirmar y Pagar'}
+          onProceed={handleConfirm}
+          isReadyToProceed={!isLoading && Boolean(address) && cartItems.length > 0 && !isProcessing}
+        />
+      )}
     >
-          <div className="space-y-5">
-            {isLoading ? <div className="rounded-[24px] bg-slate-50 p-8 text-center text-sm font-bold text-slate-500">Cargando información...</div> : <>
-              <Section eyebrow="Envío" title="Dirección de envío"><div className="grid gap-4 sm:grid-cols-2"><Detail label="Destinatario">{address && `${address.firstName} ${address.lastName}`}</Detail><Detail label="Teléfono">{address?.phone}</Detail><div className="sm:col-span-2"><Detail label="Domicilio">{address && `${address.street} ${address.exteriorNumber}${address.interiorNumber ? ` Int. ${address.interiorNumber}` : ''}, ${address.neighborhood}, C.P. ${address.postalCode}, ${address.city}, ${address.state}`}</Detail></div><Detail label="Paquetería">{shipping.name}</Detail></div></Section>
-              <Section eyebrow="Facturación" title="Datos fiscales">{billing ? <div className="grid gap-4 sm:grid-cols-2"><Detail label="Razón social">{billing.companyName}</Detail><Detail label="RFC">{billing.rfc}</Detail><Detail label="Régimen">{billing.taxRegimen}</Detail><Detail label="Uso de CFDI">{billing.cfdiUse}</Detail></div> : <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Factura de público general con RFC genérico</p>}</Section>
-              <Section eyebrow="Pago" title="Método seleccionado"><div className="flex items-center justify-between rounded-2xl bg-emerald-50/60 p-4"><span className="text-sm font-black text-slate-800">{paymentName}</span><span className="text-sm font-bold text-emerald-700">{selectedPaymentMethod === 'card' ? cardLabel : 'Pago simulado'}</span></div></Section>
-              <Section eyebrow="Productos" title={`Artículos (${totalItems})`}><div className="divide-y divide-slate-100">{cartItems.map((item) => <div key={item.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"><img src={item.images?.[0] || item.image || 'https://via.placeholder.com/300?text=FIRSTPC'} alt="" className="h-14 w-14 rounded-xl object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-black text-slate-800">{item.name || item.title || 'Producto'}</p><p className="mt-1 text-xs font-semibold text-slate-400">Cantidad: {item.quantity}</p></div><p className="text-sm font-black text-slate-900">{money.format(Number(item.price) || 0)}</p></div>)}</div></Section>
-            </>}
-            {error && <p className="rounded-2xl bg-rose-50 p-4 text-sm font-bold text-rose-600">{error}</p>}
-      </div>
+      <ConfirmOrderView
+        address={address}
+        billing={billing}
+        cartItems={cartItems}
+        emailQueued={emailQueued}
+        error={error}
+        isLoading={isLoading}
+        isProcessing={isProcessing}
+        order={order}
+        orderNumber={order?.orderNumber}
+        paymentName={paymentLabels[selectedPaymentMethod] || 'Tarjeta'}
+        selectedPaymentMethod={selectedPaymentMethod}
+        shipping={shipping}
+        shippingCost={shippingCost}
+        totalItems={totalItems}
+        totalAmount={totalAmount}
+        ivaAmount={ivaAmount}
+        orderTotal={orderTotal}
+        onProceed={handleConfirm}
+        onNavigate={navigate}
+      />
     </CheckoutLayout>
-      {order && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="order-success-title">
-        <div className="w-full max-w-md rounded-[32px] border border-emerald-100 bg-white p-6 text-center font-['Montserrat'] shadow-2xl sm:p-10">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl text-emerald-600">✓</div>
-          <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.3em] text-emerald-500">Pedido confirmado</p>
-          <h2 id="order-success-title" className="mt-2 text-3xl font-black text-slate-900">¡Gracias por tu compra!</h2>
-          <p className="mt-3 text-sm font-medium text-slate-500">Tu número de orden es <strong className="text-slate-900">{orderNumber}</strong>.</p>
-          <ReceiptPdf
-            order={order}
-            address={address}
-            paymentName={paymentName}
-            shippingName={order.shipping?.carrier || shipping.name}
-            shippingCost={order.shippingCost ?? order.shipping?.cost ?? 0}
-            ivaAmount={order.ivaAmount ?? 0}
-            orderTotal={order.totalPaid ?? 0}
-          />
-          <p className="mt-5 text-xs font-semibold text-slate-500">{emailQueued && 'Hemos enviado una copia de tu comprobante al correo electrónico registrado.'}</p>
-          <button type="button" onClick={() => navigate('/')} className="mt-5 text-sm font-bold text-emerald-600 hover:text-emerald-700">Volver a la tienda</button>
-        </div>
-      </div>}
-    </>
   );
 };
 

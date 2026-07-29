@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import StockNotice from '../AdminInventory/StockNotice';
 
 const moneyFormatter = new Intl.NumberFormat('es-MX', {
   style: 'currency',
@@ -71,6 +72,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
                           🗑
                         </button>
                       </div>
+
+                      <div className="mt-2"><StockNotice product={item} quantity={item.quantity} compact /></div>
 
                       <div className="flex items-center justify-between mt-2">
                         <div className="inline-flex items-center rounded-full border border-slate-200 bg-white p-0.5">

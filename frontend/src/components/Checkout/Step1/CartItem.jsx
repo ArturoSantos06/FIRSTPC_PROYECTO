@@ -1,4 +1,6 @@
 import React from 'react';
+import StockNotice from '../../AdminInventory/StockNotice';
+import { getLocalStock, getMaxQuantity } from '../../AdminInventory/inventory';
 
 const moneyFormatter = new Intl.NumberFormat('es-MX', {
   style: 'currency',
@@ -33,7 +35,7 @@ const CartItem = ({ item, onIncrement, onDecrement, onChangeQuantity, onRemove }
               {item.name}
             </h3>
             <p className="mt-1 text-sm font-medium text-slate-500">
-              Stock disponible: {Number.isFinite(Number(item.stock)) ? Number(item.stock) : 'Ilimitado'}
+              Stock disponible en tienda: {getLocalStock(item)}
             </p>
           </div>
 
@@ -69,8 +71,7 @@ const CartItem = ({ item, onIncrement, onDecrement, onChangeQuantity, onRemove }
                 if (val === '') {
                   onChangeQuantity(item, '');
                 } else {
-                  const maxStock = Number.isFinite(Number(item.stock)) && Number(item.stock) > 0 ? Number(item.stock) : Number.POSITIVE_INFINITY;
-                  onChangeQuantity(item, Math.min(Number(val), maxStock));
+                  onChangeQuantity(item, Math.min(Number(val), getMaxQuantity(item)));
                 }
               }}
               onBlur={(e) => {
@@ -90,6 +91,8 @@ const CartItem = ({ item, onIncrement, onDecrement, onChangeQuantity, onRemove }
               +
             </button>
           </div>
+
+          <div className="w-full sm:w-auto sm:max-w-xl"><StockNotice product={item} quantity={item.quantity} compact /></div>
 
           <div className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 shadow-[0_10px_20px_rgba(15,23,42,0.04)]">
             <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-400">Precio unitario</p>

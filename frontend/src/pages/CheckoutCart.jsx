@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import CheckoutLayout from '../components/Checkout/common/CheckoutLayout';
 import CartItem from '../components/Checkout/Step1/CartItem';
 import OrderSummary from '../components/Checkout/common/OrderSummary';
+import { getMaxQuantity } from '../components/AdminInventory/inventory';
 
 const CheckoutCart = ({ className = '' }) => {
   const { cartItems, totalItems, totalAmount, updateQuantity, removeItem, clearCart } = useCart();
@@ -17,8 +18,7 @@ const CheckoutCart = ({ className = '' }) => {
   );
 
   const handleIncrement = (item) => {
-    const maxStock = Number.isFinite(Number(item.stock)) && Number(item.stock) > 0 ? Number(item.stock) : Number.POSITIVE_INFINITY;
-    updateQuantity(item.id, Math.min((Number(item.quantity) || 1) + 1, maxStock));
+    updateQuantity(item.id, Math.min((Number(item.quantity) || 1) + 1, getMaxQuantity(item)));
   };
 
   const handleDecrement = (item) => updateQuantity(item.id, Math.max((Number(item.quantity) || 1) - 1, 1));

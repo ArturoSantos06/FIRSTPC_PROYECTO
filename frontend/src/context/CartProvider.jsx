@@ -1,18 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CartContext } from './CartContext';
+import { getMaxQuantity, normalizeQuantity } from '../components/AdminInventory/inventory';
 
 const STORAGE_KEY = 'firstpc-shopping-cart';
-
-const clampQuantity = (value, stock) => {
-  const parsedValue = Number.parseInt(value, 10);
-  const maxStock = Number.isFinite(Number(stock)) && Number(stock) > 0 ? Number(stock) : Number.POSITIVE_INFINITY;
-
-  if (!Number.isFinite(parsedValue)) {
-    return 1;
-  }
-
-  return Math.min(Math.max(parsedValue, 1), maxStock);
-};
 
 const getStoredCart = () => {
   if (typeof window === 'undefined') {
@@ -50,7 +40,7 @@ export const CartProvider = ({ children }) => {
 
     setCartItems((currentItems) => {
       const existingItem = currentItems.find((item) => item.id === product.id);
-      const maxStock = Number.isFinite(Number(product.stock)) && Number(product.stock) > 0 ? Number(product.stock) : Number.POSITIVE_INFINITY;
+      const maxQuantity = getMaxQuantity(product);
 
       const quantityToAdd = Math.max(1, Number(requestedQuantity) || 1);
 
@@ -60,7 +50,7 @@ export const CartProvider = ({ children }) => {
           {
             ...product,
             image: product.images?.[0] || product.image || '',
-            quantity: Math.min(quantityToAdd, maxStock),
+            quantity: Math.min(quantityToAdd, maxQuantity),
           },
         ];
       }
@@ -73,7 +63,7 @@ export const CartProvider = ({ children }) => {
         return {
           ...item,
           image: product.images?.[0] || product.image || item.image || '',
-          quantity: Math.min((Number(item.quantity) || 1) + quantityToAdd, maxStock),
+          quantity: Math.min((Number(item.quantity) || 1) + quantityToAdd, maxQuantity),
         };
       });
     });
@@ -83,7 +73,7 @@ export const CartProvider = ({ children }) => {
     setCartItems((currentItems) =>
       currentItems.map((item) => ({
         ...item,
-        quantity: item.id === itemId ? clampQuantity(nextQuantity, item.stock) : item.quantity,
+        quantity: item.id === itemId ? normalizeQuantity(nextQuantity, item) : item.quantity,
       }))
     );
   };
@@ -99,7 +89,7 @@ export const CartProvider = ({ children }) => {
   const cartSummary = useMemo(() => {
     const items = cartItems.map((item) => ({
       ...item,
-      quantity: clampQuantity(item.quantity ?? 1, item.stock),
+      quantity: normalizeQuantity(item.quantity ?? 1, item),
     }));
 
     const totalItems = items.reduce((accumulator, item) => accumulator + item.quantity, 0);

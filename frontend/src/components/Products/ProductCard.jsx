@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import FavoriteButton from '../FavoriteButton';
+import { canAddToCart } from '../AdminInventory/inventory';
 
 const ProductCard = ({ product, isAdmin, onEditProduct }) => {
   const { addItem } = useCart();
@@ -67,9 +68,10 @@ const ProductCard = ({ product, isAdmin, onEditProduct }) => {
           type="button"
           onClick={(event) => {
             event.stopPropagation();
-            addItem(product);
+            if (canAddToCart(product)) addItem(product);
           }}
-          className="h-11 w-11 bg-slate-900 hover:bg-[#10B981] text-white flex items-center justify-center rounded-full shadow-sm transition-all duration-300 hover:shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          disabled={!canAddToCart(product)}
+          className="h-11 w-11 bg-slate-900 hover:bg-[#10B981] text-white flex items-center justify-center rounded-full shadow-sm transition-all duration-300 hover:shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer disabled:cursor-not-allowed disabled:bg-slate-300"
           aria-label={`Agregar ${product.name} al carrito`}
         >
           <span className="text-md font-bold">+</span>
