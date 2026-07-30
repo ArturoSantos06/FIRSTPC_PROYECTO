@@ -1,7 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import FavoriteButton from '../FavoriteButton';
 import StockNotice from '../AdminInventory/StockNotice';
 import { canAddToCart, getMaxQuantity } from '../AdminInventory/inventory';
+import { auth, db } from '../../firebaseConfig';
+import { AuthContext } from '../../context/AuthContext';
 
 const formatPrice = (value) => new Intl.NumberFormat('es-MX', {
   style: 'currency',
@@ -9,16 +13,85 @@ const formatPrice = (value) => new Intl.NumberFormat('es-MX', {
   maximumFractionDigits: 0,
 }).format(value);
 
-const ProductHero = ({ product, onAddToCart }) => {
+const ProductHero = ({ product, onAddToCart, onBack }) => {
   const images = product.images?.filter(Boolean) || [];
   const specs = Object.entries(product.keySpecs || {});
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [userRating, setUserRating] = useState(null);
+  const [displayRating, setDisplayRating] = useState(Number(product.rating) || 0);
+  const [displayReviewsCount, setDisplayReviewsCount] = useState(Number(product.reviewsCount) || 0);
+  const [ratingLoading, setRatingLoading] = useState(false);
+  const [ratingError, setRatingError] = useState('');
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     setActiveImage(0);
     setQuantity(1);
+    setUserRating(null);
+    setDisplayRating(Number(product.rating) || 0);
+    setDisplayReviewsCount(Number(product.reviewsCount) || 0);
+    setRatingError('');
   }, [product.id]);
+
+  useEffect(() => {
+    let active = true;
+    const currentUser = auth.currentUser || user;
+    if (!currentUser?.uid) return undefined;
+    getDoc(doc(db, 'products', product.id, 'ratings', currentUser.uid)).then((snapshot) => {
+      if (active && snapshot.exists()) setUserRating(Number(snapshot.data().rating));
+    }).catch((error) => console.error('Error cargando calificación:', error));
+    return () => { active = false; };
+  }, [product.id, user]);
+
+  const handleRating = async (value) => {
+    const currentUser = auth.currentUser || user;
+    if (!currentUser?.uid) {
+      setRatingError('Inicia sesión para calificar este producto.');
+      return;
+    }
+
+    setRatingLoading(true);
+    setRatingError('');
+    try {
+      const productRef = doc(db, 'products', product.id);
+      const ratingRef = doc(db, 'products', product.id, 'ratings', currentUser.uid);
+      const updatedRating = await runTransaction(db, async (transaction) => {
+        const productSnapshot = await transaction.get(productRef);
+        const previousRatingSnapshot = await transaction.get(ratingRef);
+        const productData = productSnapshot.data() || {};
+        const currentCount = Number(productData.reviewsCount) || displayReviewsCount;
+        const currentAverage = Number(productData.rating) || displayRating;
+        const currentTotal = Number.isFinite(Number(productData.ratingTotal))
+          ? Number(productData.ratingTotal)
+          : currentAverage * currentCount;
+        const previousRating = previousRatingSnapshot.exists() ? Number(previousRatingSnapshot.data().rating) : null;
+        const nextCount = previousRating === null ? currentCount + 1 : currentCount;
+        const nextTotal = previousRating === null ? currentTotal + value : currentTotal - previousRating + value;
+
+        transaction.update(productRef, {
+          rating: Number((nextTotal / nextCount).toFixed(1)),
+          ratingTotal: nextTotal,
+          reviewsCount: nextCount,
+          updatedAt: serverTimestamp(),
+        });
+        transaction.set(ratingRef, { rating: value, updatedAt: serverTimestamp() }, { merge: true });
+
+        return {
+          rating: Number((nextTotal / nextCount).toFixed(1)),
+          reviewsCount: nextCount,
+        };
+      });
+      setUserRating(value);
+      setDisplayRating(updatedRating.rating);
+      setDisplayReviewsCount(updatedRating.reviewsCount);
+    } catch (error) {
+      console.error('Error guardando calificación:', error);
+      setRatingError('No pudimos guardar tu calificación. Intenta nuevamente.');
+    } finally {
+      setRatingLoading(false);
+    }
+  };
 
   const maxQuantity = getMaxQuantity(product);
   const canPurchase = canAddToCart(product);
@@ -28,7 +101,8 @@ const ProductHero = ({ product, onAddToCart }) => {
 
   return (
     <section className="grid gap-8 lg:grid-cols-[1.08fr_.92fr]">
-      <div className="rounded-[32px] border border-slate-100 bg-white p-4 shadow-[0_15px_45px_rgba(15,23,42,0.04)] md:p-6">
+      <div className="relative rounded-[32px] border border-slate-100 bg-white p-4 shadow-[0_15px_45px_rgba(15,23,42,0.04)] md:p-6">
+        <button type="button" onClick={onBack} title="Volver al catálogo" aria-label="Volver al catálogo" className="absolute left-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 md:-left-14 md:top-3"><ArrowLeft size={17} /></button>
         <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[24px] bg-slate-50">
           {images[activeImage] ? (
             <img
@@ -56,7 +130,7 @@ const ProductHero = ({ product, onAddToCart }) => {
         <div>
           <p className="mb-3 text-xs font-bold uppercase tracking-[.18em] text-slate-400">{product.brand} · SKU {product.sku || 'No disponible'}{product.mpn ? ` · MPN ${product.mpn}` : ''}</p>
           <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-900 md:text-3xl">{product.name}</h1>
-          <div className="mt-4 flex items-center gap-2 text-sm"><span className="text-lg tracking-widest text-amber-400">★★★★★</span><span className="font-black text-slate-700">{product.rating ?? '—'}</span><span className="font-semibold text-slate-400">({product.reviewsCount || 0} opiniones)</span></div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm"><div className="flex items-center gap-0.5" aria-label="Calificar producto">{[1, 2, 3, 4, 5].map((star) => <button key={star} type="button" onClick={() => handleRating(star)} disabled={ratingLoading} aria-label={`Calificar con ${star} estrellas`} className={`text-xl leading-none transition hover:scale-110 disabled:cursor-wait disabled:opacity-50 ${star <= Math.round(userRating ?? displayRating) ? 'text-amber-400' : 'text-slate-200'}`}>★</button>)}</div><span className="font-black text-slate-700">{displayRating.toFixed(1)}</span><span className="font-semibold text-slate-400">({displayReviewsCount} opiniones)</span>{ratingError && <span className="basis-full text-xs font-bold text-rose-500">{ratingError}</span>}</div>
         </div>
         <div className="rounded-[24px] bg-slate-50 p-6">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Precio FIRSTPC</p>

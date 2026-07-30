@@ -1,8 +1,8 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import './index.css';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
-import Login from './pages/Login';
+import LoginModal from './components/LoginModal';
 import CheckoutAddress from './pages/CheckoutAddress';
 import CheckoutShippingPayment from './pages/CheckoutShippingPayment';
 import CheckoutConfirmOrder from './pages/CheckoutConfirmOrder';
@@ -18,6 +18,8 @@ import ProfileBilling from './pages/ProfileBilling';
 import PCBuilder from './components/PCBuilder/PCBuilder';
 import RecommendationWizard from './components/RecommendationWizard/RecommendationWizard';
 import AdminInventory from './pages/AdminInventory';
+import Support from './pages/Support';
+import Footer from './components/Home/Footer';
 
 
 function App() {
@@ -33,10 +35,11 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         <Route
           path="/login"
-          element={user ? <LoginRedirect /> : <Login />}
+          element={user ? <LoginRedirect /> : <LoginModal isOpen onClose={() => window.history.back()} />}
         />
 
         <Route path="/" element={<Home />} />
@@ -44,14 +47,20 @@ function App() {
         <Route
           path="/armar-pc"
           element={
-            <div className="min-h-screen bg-slate-50 pt-28 [&_.bg-slate-900]:!bg-white [&_.bg-slate-900]:!text-slate-800 [&_.bg-slate-900_.text-white]:!text-slate-800 [&_button.bg-slate-900]:!border [&_button.bg-slate-900]:!border-slate-300 [&_button.bg-slate-900]:!bg-white [&_button.bg-slate-900]:!text-slate-700 [&_button.bg-slate-900:hover]:!border-emerald-400 [&_button.bg-slate-900:hover]:!bg-emerald-50 [&_button.bg-slate-900:hover]:!text-emerald-700 [&_.bg-amber-50]:!hidden [&_button.text-slate-600]:!hidden [&_button.border:disabled]:!hidden">
+            <div className="min-h-screen bg-slate-50 pt-28 [&_.bg-slate-900]:!bg-white [&_.bg-slate-900]:!text-slate-800 [&_.bg-slate-900_.text-white]:!text-slate-800 [&_button.bg-slate-900]:!border [&_button.bg-slate-900]:!border-slate-300 [&_button.bg-slate-900]:!bg-white [&_button.bg-slate-900]:!text-slate-700 [&_button.bg-slate-900:hover]:!border-emerald-400 [&_button.bg-slate-900:hover]:!bg-emerald-50 [&_button.bg-slate-900:hover]:!text-emerald-700 [&_.bg-amber-50]:!hidden [&_button.border:disabled]:!hidden">
               <Navbar />
               <PCBuilder />
+              <Footer />
             </div>
           }
         />
 
         <Route path="/recomendador" element={<RecommendationWizard />} />
+
+        <Route
+          path="/soporte"
+          element={<Support />}
+        />
 
         <Route path="/producto/:id" element={<ProductDetailPage />} />
         
@@ -61,6 +70,7 @@ function App() {
             <div className="min-h-screen bg-[#F8FAFC]/50 pt-28">
               <Navbar />
               <ProductCatalog />
+              <Footer />
             </div>
           } 
         />
@@ -71,6 +81,7 @@ function App() {
             <div className="min-h-screen bg-[#F8FAFC]/50 pt-28">
               <Navbar />
               <ProductCatalog />
+              <Footer />
             </div>
           } 
         />
@@ -79,10 +90,11 @@ function App() {
           path="/carrito"
           element={
             <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
-              <Navbar />
-              <div className="mx-auto w-full max-w-7xl">
-                <CheckoutCart />
-              </div>
+                <Navbar />
+                <div className="mx-auto w-full max-w-7xl">
+                  <CheckoutCart />
+                </div>
+                <Footer />
             </div>
           }
         />
@@ -96,6 +108,7 @@ function App() {
                 <div className="mx-auto w-full max-w-7xl">
                   <CheckoutAddress />
                 </div>
+                <Footer />
               </div>
             ) : <Navigate to="/login" replace />
           }
@@ -110,6 +123,7 @@ function App() {
                 <div className="mx-auto w-full max-w-7xl">
                   <CheckoutShippingPayment />
                 </div>
+                <Footer />
               </div>
             ) : <Navigate to="/login" replace />
           }
@@ -124,6 +138,7 @@ function App() {
                 <div className="mx-auto w-full max-w-7xl">
                   <CheckoutConfirmOrder />
                 </div>
+                <Footer />
               </div>
             ) : <Navigate to="/login" replace />
           }
@@ -138,6 +153,7 @@ function App() {
                 <div className="mx-auto w-full max-w-7xl">
                   <UserProfile />
                 </div>
+                <Footer />
               </div>
             ) : <Navigate to="/login" replace />
           }
@@ -152,6 +168,7 @@ function App() {
                 <div className="mx-auto w-full max-w-7xl">
                   <UserProfile initialTab="favorites" />
                 </div>
+                <Footer />
               </div>
             ) : <Navigate to="/login" replace />
           }
@@ -166,6 +183,7 @@ function App() {
                 <div className="mx-auto w-full max-w-7xl">
                   <ProfileShippingAddresses />
                 </div>
+                <Footer />
               </div>
             ) : <Navigate to="/login" replace />
           }
@@ -180,6 +198,7 @@ function App() {
                 <div className="mx-auto w-full max-w-7xl">
                   <ProfileBilling />
                 </div>
+                <Footer />
               </div>
             ) : <Navigate to="/login" replace />
           }
@@ -194,6 +213,7 @@ function App() {
                 <div className="mx-auto w-full max-w-7xl">
                   <UserProfile initialTab="configurations" />
                 </div>
+                <Footer />
               </div>
             ) : <Navigate to="/login" replace />
           }
@@ -206,6 +226,7 @@ function App() {
               <div className="min-h-screen bg-[#F8FAFC]/50 pt-28">
                 <Navbar /> 
                 <ProductCatalog />
+                <Footer />
               </div>
             } 
           />
@@ -218,6 +239,16 @@ function App() {
     </Router>
   );
 }
+
+const ScrollToTop = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname, location.search]);
+
+  return null;
+};
 
 const LoginRedirect = () => {
   const location = useLocation();

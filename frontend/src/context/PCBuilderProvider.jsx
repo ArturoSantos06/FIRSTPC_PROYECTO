@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PCBuilderContext } from "./PCBuilderContext";
 
 export const PC_BUILDER_CATEGORIES = [
@@ -25,9 +25,29 @@ const INITIAL_COMPONENTS = PC_BUILDER_CATEGORIES.reduce(
   {}
 );
 
+const STORAGE_KEY = "firstpc-pc-builder-state";
+
+const getInitialBuilderState = () => {
+  try {
+    const savedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (!savedState) return { selectedComponents: INITIAL_COMPONENTS, currentStep: 1 };
+    return {
+      selectedComponents: { ...INITIAL_COMPONENTS, ...(savedState.selectedComponents || {}) },
+      currentStep: Math.min(Math.max(Number(savedState.currentStep) || 1, 1), 12),
+    };
+  } catch {
+    return { selectedComponents: INITIAL_COMPONENTS, currentStep: 1 };
+  }
+};
+
 export function PCBuilderProvider({ children }) {
-  const [selectedComponents, setSelectedComponents] = useState(INITIAL_COMPONENTS);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [initialState] = useState(getInitialBuilderState);
+  const [selectedComponents, setSelectedComponents] = useState(initialState.selectedComponents);
+  const [currentStep, setCurrentStep] = useState(initialState.currentStep);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ selectedComponents, currentStep }));
+  }, [selectedComponents, currentStep]);
 
   const selectComponent = (category, product) => {
     if (!PC_BUILDER_CATEGORIES.includes(category)) return;
@@ -53,7 +73,13 @@ export function PCBuilderProvider({ children }) {
     setSelectedComponents({ ...INITIAL_COMPONENTS, ...components });
     setCurrentStep(step);
   }, []);
-  const goToStep = useCallback((step) => setCurrentStep(Math.min(Math.max(step, 1), 12)), []);
+  const goToStep = useCallback((step) => {
+    setCurrentStep((current) => {
+      const targetStep = Math.min(Math.max(step, 1), 12);
+      const hasComponents = Object.values(selectedComponents).some(Boolean);
+      return targetStep === 12 && !hasComponents ? current : targetStep;
+    });
+  }, [selectedComponents]);
 
   const totalPrice = useMemo(
     () => Object.values(selectedComponents).reduce((total, product) => total + (Number(product?.price) || 0), 0),

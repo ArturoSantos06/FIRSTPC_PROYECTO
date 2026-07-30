@@ -54,6 +54,11 @@ const ProductCard = ({ product, isAdmin, onEditProduct }) => {
         <p className="text-xs font-medium text-slate-400 capitalize mb-4">
           {product.category}
         </p>
+        <div className="mb-2 flex items-center gap-2" aria-label={`Calificación: ${Number(product.rating || 0).toFixed(1)} de 5 estrellas`}>
+          <span className="text-sm tracking-widest text-amber-400">★★★★★</span>
+          <span className="text-xs font-black text-slate-600">{Number(product.rating || 0).toFixed(1)}</span>
+          <span className="text-[10px] font-semibold text-slate-400">({product.reviewsCount || 0})</span>
+        </div>
       </div>
 
       <div className="relative z-10 mt-2 pt-3 border-t border-slate-50 flex items-center justify-between gap-2">

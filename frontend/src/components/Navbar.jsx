@@ -1,4 +1,4 @@
-import { useContext, useCallback, useState } from 'react';
+import { useContext, useCallback, useEffect, useState } from 'react';
 import logoStore from '../assets/logof.png';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from "firebase/auth";
@@ -7,12 +7,8 @@ import { AuthContext } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import CartDrawer from './Cart/CartDrawer';
 import UserProfileMenu from './UserProfileMenu';
-
-const SearchIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-  </svg>
-);
+import NavbarSearch from './NavbarSearch';
+import LoginModal from './LoginModal';
 
 const CartIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -26,6 +22,15 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  useEffect(() => {
+    const openLoginModal = () => setIsLoginModalOpen(true);
+    window.addEventListener('open-login-modal', openLoginModal);
+    return () => window.removeEventListener('open-login-modal', openLoginModal);
+  }, []);
+  const [searchCloseSignal, setSearchCloseSignal] = useState(0);
+  const closeSearch = () => setSearchCloseSignal((signal) => signal + 1);
 
   const handleSignOut = useCallback(async () => {
     try {
@@ -49,6 +54,7 @@ const Navbar = () => {
     { name: "Inventario", path: "/admin/inventario" },
     { name: "Garantías (RMA)", path: "/admin/rma" },
     { name: "Armar PC", path: "/armar-pc" },
+    { name: "Soporte", path: "/soporte" },
   ];
 
   const navLinks = user?.role === 'admin' ? adminNavLinks : clientNavLinks;
@@ -68,7 +74,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           
           <div className="w-32 md:w-40 flex items-center justify-start flex-shrink-0">
-            <Link to="/" title="FIRSTPC Home" className="block">
+            <Link to="/" title="FIRSTPC Home" onClick={closeSearch} className="block">
               <img 
                 src={logoStore} 
                 alt="FIRSTPC Logo" 
@@ -83,6 +89,7 @@ const Navbar = () => {
                 <li key={index}>
                   <Link
                     to={link.path}
+                    onClick={closeSearch}
                     aria-current={activeLink === link.path ? 'page' : undefined}
                     className={`whitespace-nowrap text-sm font-semibold transition-colors duration-200 ${activeLink === link.path ? 'text-[#10B981]' : 'text-slate-700 hover:text-[#10B981]'}`}
                   >
@@ -94,9 +101,7 @@ const Navbar = () => {
           </nav>
 
           <div className="flex items-center space-x-4 md:space-x-6 flex-shrink-0">
-            <button className="text-[#64748B] hover:text-[#10B981] transition-colors duration-200 p-1">
-              <SearchIcon />
-            </button>
+            <NavbarSearch isAdmin={user?.role === 'admin'} closeSignal={searchCloseSignal} />
             <button
               type="button"
               onClick={() => setIsCartDrawerOpen(true)}
@@ -114,12 +119,9 @@ const Navbar = () => {
             {user ? (
               <UserProfileMenu user={user} onSignOut={handleSignOut} />
             ) : (
-              <Link 
-                to="/login" 
-                className="hidden sm:inline-block bg-[#10B981] text-white font-bold text-sm px-6 py-2.5 rounded-full hover:bg-emerald-600 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shadow-[0_4px_14px_rgba(16,185,129,0.25)] whitespace-nowrap"
-              >
+              <button type="button" onClick={() => setIsLoginModalOpen(true)} className="hidden sm:inline-block bg-[#10B981] text-white font-bold text-sm px-6 py-2.5 rounded-full hover:bg-emerald-600 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shadow-[0_4px_14px_rgba(16,185,129,0.25)] whitespace-nowrap">
                 Iniciar Sesión
-              </Link>
+              </button>
             )}
           </div>
 
@@ -127,6 +129,7 @@ const Navbar = () => {
       </div>
 
       <CartDrawer isOpen={isCartDrawerOpen} onClose={() => setIsCartDrawerOpen(false)} />
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
     </header>
   );
 };

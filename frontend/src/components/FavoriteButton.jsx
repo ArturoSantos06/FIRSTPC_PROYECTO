@@ -1,15 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Heart, LogIn } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
 
 const FavoriteButton = ({ productId, className = '', size = 20 }) => {
   const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const location = useLocation();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [promptPosition, setPromptPosition] = useState({ top: 0, left: 0 });
@@ -63,7 +60,7 @@ const FavoriteButton = ({ productId, className = '', size = 20 }) => {
       {showLoginPrompt && !user && createPortal(
         <span ref={promptRef} role="dialog" onClick={(event) => event.stopPropagation()} onMouseDown={(event) => event.stopPropagation()} style={{ top: promptPosition.top, left: promptPosition.left }} className="fixed z-[9999] w-56 rounded-2xl border border-slate-100 bg-white p-3 text-left text-xs font-semibold text-slate-600 shadow-[0_16px_40px_rgba(15,23,42,0.16)]">
           <span className="block">Inicia sesión para guardar tus favoritos.</span>
-          <button type="button" onClick={() => navigate('/login', { state: { from: `${location.pathname}${location.search}${location.hash}` } })} className="mt-2 inline-flex items-center gap-1 font-black text-emerald-600 hover:text-emerald-700"><LogIn size={14} /> Iniciar sesión</button>
+          <button type="button" onClick={() => { setShowLoginPrompt(false); window.dispatchEvent(new Event('open-login-modal')); }} className="mt-2 inline-flex items-center gap-1 font-black text-emerald-600 hover:text-emerald-700"><LogIn size={14} /> Iniciar sesión</button>
           <button type="button" onClick={() => setShowLoginPrompt(false)} className="ml-3 text-slate-400 hover:text-slate-600">Cerrar</button>
         </span>, document.body
       )}
