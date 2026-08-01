@@ -20,6 +20,7 @@ import RecommendationWizard from './components/RecommendationWizard/Recommendati
 import AdminInventory from './pages/AdminInventory';
 import Support from './pages/Support';
 import Footer from './components/Home/Footer';
+import { AboutPage, FAQPage, HowToBuyPage, PCBuilderGuidePage, PaymentShippingPage, RecommendationGuidePage, WarrantyPage } from './pages/InformationPages';
 
 
 function App() {
@@ -56,6 +57,14 @@ function App() {
         />
 
         <Route path="/recomendador" element={<RecommendationWizard />} />
+
+        <Route path="/quienes-somos" element={<AboutPage />} />
+        <Route path="/formas-pago-envio" element={<PaymentShippingPage />} />
+        <Route path="/como-comprar" element={<HowToBuyPage />} />
+        <Route path="/faq" element={<FAQPage />} />
+        <Route path="/guia-pc-builder" element={<PCBuilderGuidePage />} />
+        <Route path="/guia-recomendador" element={<RecommendationGuidePage />} />
+        <Route path="/garantias" element={<WarrantyPage />} />
 
         <Route
           path="/soporte"
@@ -148,12 +157,12 @@ function App() {
           path="/perfil/compras"
           element={
             user ? (
-              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
+              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-0 md:px-6 lg:px-10">
                 <Navbar />
                 <div className="mx-auto w-full max-w-7xl">
                   <UserProfile />
                 </div>
-                <Footer />
+                <div className="mt-12"><Footer /></div>
               </div>
             ) : <Navigate to="/login" replace />
           }
@@ -163,12 +172,12 @@ function App() {
           path="/perfil/favoritos"
           element={
             user ? (
-              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
+              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-0 md:px-6 lg:px-10">
                 <Navbar />
                 <div className="mx-auto w-full max-w-7xl">
                   <UserProfile initialTab="favorites" />
                 </div>
-                <Footer />
+                <div className="mt-12"><Footer /></div>
               </div>
             ) : <Navigate to="/login" replace />
           }
@@ -178,12 +187,12 @@ function App() {
           path="/perfil/envio"
           element={
             user ? (
-              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
+              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-0 md:px-6 lg:px-10">
                 <Navbar />
                 <div className="mx-auto w-full max-w-7xl">
                   <ProfileShippingAddresses />
                 </div>
-                <Footer />
+                <div className="mt-12"><Footer /></div>
               </div>
             ) : <Navigate to="/login" replace />
           }
@@ -193,12 +202,12 @@ function App() {
           path="/perfil/facturacion"
           element={
             user ? (
-              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
+              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-0 md:px-6 lg:px-10">
                 <Navbar />
                 <div className="mx-auto w-full max-w-7xl">
                   <ProfileBilling />
                 </div>
-                <Footer />
+                <div className="mt-12"><Footer /></div>
               </div>
             ) : <Navigate to="/login" replace />
           }
@@ -208,12 +217,12 @@ function App() {
           path="/perfil/pc-configuradas"
           element={
             user ? (
-              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
+              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-0 md:px-6 lg:px-10">
                 <Navbar />
                 <div className="mx-auto w-full max-w-7xl">
                   <UserProfile initialTab="configurations" />
                 </div>
-                <Footer />
+                <div className="mt-12"><Footer /></div>
               </div>
             ) : <Navigate to="/login" replace />
           }

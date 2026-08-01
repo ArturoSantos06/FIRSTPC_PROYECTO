@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -23,14 +22,16 @@ const CheckoutConfirmOrder = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [order, setOrder] = useState(null);
-  const [emailQueued, setEmailQueued] = useState(false);
+  const [couponError, setCouponError] = useState('');
 
   const selectedShipping = state?.selectedShipping || 'estafeta';
   const selectedPaymentMethod = state?.selectedPaymentMethod || 'card';
+  const coupon = state?.coupon || null;
   const shipping = shippingOptions.find((option) => option.id === selectedShipping) || shippingOptions[0];
   const shippingCost = cartItems.length ? shipping.price : 0;
-  const ivaAmount = totalAmount * (IVA_RATE / (1 + IVA_RATE));
-  const orderTotal = totalAmount + shippingCost;
+  const discountAmount = coupon ? totalAmount * (Number(coupon.discountRate) || 0.10) : 0;
+  const ivaAmount = (totalAmount - discountAmount) * (IVA_RATE / (1 + IVA_RATE));
+  const orderTotal = totalAmount - discountAmount + shippingCost;
 
   useEffect(() => {
     const loadCheckoutData = async () => {
@@ -56,15 +57,11 @@ const CheckoutConfirmOrder = () => {
     loadCheckoutData();
   }, [state?.selectedAddressId]);
 
-  const simulateReceiptEmail = (createdOrder) => {
-    setEmailQueued(true);
-    console.info('Preparar Cloud Function para enviar el comprobante:', { orderId: createdOrder.id, userId: auth.currentUser?.uid });
-  };
-
   const handleConfirm = async () => {
     if (isProcessing || !cartItems.length || !auth.currentUser?.uid) return;
     setIsProcessing(true);
     setError('');
+    setCouponError('');
 
     try {
       const createdOrder = await createCheckoutOrder({
@@ -78,16 +75,23 @@ const CheckoutConfirmOrder = () => {
         ivaAmount,
         orderTotal,
         userId: auth.currentUser.uid,
+        coupon,
+        discountAmount,
       });
       setOrder(createdOrder);
       clearCart();
-      simulateReceiptEmail(createdOrder);
     } catch (saveError) {
       console.error('Error al crear el pedido:', saveError);
       if (saveError?.message?.startsWith('PRODUCT_NOT_FOUND:')) {
         setError('Uno de los productos del carrito ya no está disponible. Regresa al catálogo e inténtalo nuevamente.');
       } else if (saveError?.message?.startsWith('INSUFFICIENT_STOCK:')) {
         setError(`No hay stock suficiente ni integración de distribuidor para ${saveError.message.replace('INSUFFICIENT_STOCK:', '')}.`);
+      } else if (saveError?.message === 'COUPON_ALREADY_USED') {
+        setCouponError('Este código ya fue utilizado y no puede volver a aplicarse.');
+        setError('El código de descuento ya no está disponible.');
+      } else if (saveError?.message === 'COUPON_INVALID') {
+        setCouponError('No pudimos validar este código. Revisa que sea el cupón de tu cuenta.');
+        setError('El código de descuento no es válido.');
       } else {
         setError('No fue posible procesar el pedido con el distribuidor. Intenta nuevamente.');
       }
@@ -107,6 +111,7 @@ const CheckoutConfirmOrder = () => {
           uniqueProducts={cartItems.length}
           totalAmount={totalAmount}
           shippingCost={shippingCost}
+          discountAmount={discountAmount}
           ivaAmount={ivaAmount}
           showShipping
           buttonText={isProcessing ? 'Procesando con distribuidor...' : 'Confirmar y Pagar'}
@@ -119,7 +124,6 @@ const CheckoutConfirmOrder = () => {
         address={address}
         billing={billing}
         cartItems={cartItems}
-        emailQueued={emailQueued}
         error={error}
         isLoading={isLoading}
         isProcessing={isProcessing}
@@ -133,6 +137,10 @@ const CheckoutConfirmOrder = () => {
         totalAmount={totalAmount}
         ivaAmount={ivaAmount}
         orderTotal={orderTotal}
+        coupon={coupon}
+        discountAmount={discountAmount}
+        couponError={couponError}
+        onCloseCouponError={() => setCouponError('')}
         onProceed={handleConfirm}
         onNavigate={navigate}
       />

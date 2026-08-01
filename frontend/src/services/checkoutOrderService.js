@@ -16,6 +16,8 @@ export const createCheckoutOrder = async ({
   ivaAmount,
   orderTotal,
   userId,
+  coupon,
+  discountAmount = 0,
 }) => {
   const createdAt = new Date();
   const purchasableItems = getPurchasableItems(cartItems);
@@ -80,6 +82,8 @@ export const createCheckoutOrder = async ({
     billing: billing || { note: 'Factura de público general con RFC genérico' },
     paymentMethod: selectedPaymentMethod,
     subtotal: totalAmount,
+    discountAmount,
+    couponCode: coupon?.code || null,
     ivaRate: 0.16,
     ivaAmount,
     shippingCost,
@@ -92,8 +96,19 @@ export const createCheckoutOrder = async ({
   };
 
   const orderReference = doc(collection(db, 'orders'));
+  const couponReference = coupon?.code ? doc(db, 'welcomeCoupons', userId) : null;
   await runTransaction(db, async (transaction) => {
     const currentSnapshots = await Promise.all(productReferences.map((reference) => transaction.get(reference)));
+    const couponSnapshot = couponReference ? await transaction.get(couponReference) : null;
+
+    if (couponReference) {
+      if (!couponSnapshot?.exists()) throw new Error('COUPON_INVALID');
+      const couponData = couponSnapshot.data();
+      if (couponData.userId !== userId || couponData.code !== coupon.code) throw new Error('COUPON_INVALID');
+      if (couponData.status === 'used') throw new Error('COUPON_ALREADY_USED');
+      if (couponData.status !== 'active') throw new Error('COUPON_INVALID');
+      transaction.update(couponReference, { status: 'used', usedAt: serverTimestamp(), orderId: orderReference.id });
+    }
 
     currentSnapshots.forEach((productSnapshot, index) => {
       const item = purchasableItems[index];

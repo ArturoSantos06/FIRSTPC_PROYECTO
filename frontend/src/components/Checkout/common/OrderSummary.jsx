@@ -11,6 +11,7 @@ const OrderSummary = ({
   uniqueProducts,
   totalAmount,
   shippingCost = 0,
+  discountAmount = 0,
   ivaAmount,
   showShipping = false,
   onProceed,
@@ -22,8 +23,8 @@ const OrderSummary = ({
   className = '',
 }) => {
   
-  const calculatedIvaAmount = ivaAmount ?? totalAmount * (0.16 / 1.16);
-  const orderTotal = totalAmount + shippingCost;
+  const subtotalWithShipping = totalAmount + shippingCost;
+  const orderTotal = totalAmount - discountAmount + shippingCost;
   const proceedHandler = onProceed || onButtonClick;
   const isDisabled = isReadyToProceed === undefined ? isButtonDisabled : !isReadyToProceed;
 
@@ -48,23 +49,23 @@ const OrderSummary = ({
             </span>
           </div>
 
-          <div className="flex items-center justify-between border-t border-slate-100 pt-4 text-base text-slate-600">
-            <span className="font-medium">Subtotal</span>
-            <span className="text-xl font-black text-slate-900">{moneyFormatter.format(totalAmount)}</span>
-          </div>
-
           {showShipping && <div className="flex items-center justify-between text-sm text-slate-500">
             <span>Envío</span>
             <span className="font-bold text-slate-900">{moneyFormatter.format(shippingCost)}</span>
           </div>}
 
-          <div className="flex items-center justify-between text-sm text-slate-500">
-            <span>IVA (16%)</span>
-            <span className="font-bold text-slate-900">{moneyFormatter.format(calculatedIvaAmount)}</span>
+          <div className="flex items-center justify-between border-t border-slate-100 pt-4 text-base text-slate-600">
+            <span className="font-medium">Subtotal</span>
+            <span className="text-xl font-black text-slate-900">{moneyFormatter.format(subtotalWithShipping)}</span>
           </div>
 
+          {discountAmount > 0 && <div className="flex items-center justify-between text-sm text-emerald-600">
+            <span>Promoción aplicada</span>
+            <span className="font-bold">-{moneyFormatter.format(discountAmount)}</span>
+          </div>}
+
           <div className="flex items-center justify-between border-t border-slate-100 pt-4 text-base text-slate-600">
-            <span className="font-medium">Total</span>
+            <span className="font-bold">Total (IVA incluido)</span>
             <span className="text-xl font-black text-slate-900">{moneyFormatter.format(orderTotal)}</span>
           </div>
         </div>

@@ -16,7 +16,7 @@ const loadImageAsDataUrl = async (imageUrl) => {
   });
 };
 
-export const createReceiptPdf = async ({ order, address, paymentName, shippingName, shippingCost, ivaAmount, orderTotal }) => {
+export const createReceiptPdf = async ({ order, address, billing, paymentName, shippingName, shippingCost, ivaAmount, orderTotal }) => {
   const pdf = new jsPDF();
   pdf.setTextColor(15, 23, 42);
 
@@ -45,29 +45,49 @@ export const createReceiptPdf = async ({ order, address, paymentName, shippingNa
   pdf.text(address?.phone || 'Sin teléfono', 20, 75);
   pdf.text(`Pago: ${paymentName}`, 20, 82);
 
-  let y = 97;
+  let y = 94;
+  pdf.setFont('helvetica', 'bold'); pdf.text('Envío', 20, y); y += 7;
+  pdf.setFont('helvetica', 'normal');
+  const addressText = address ? `${address.street || ''} ${address.exteriorNumber || ''}${address.interiorNumber ? ` Int. ${address.interiorNumber}` : ''}, ${address.neighborhood || ''}, C.P. ${address.postalCode || ''}, ${address.city || ''}, ${address.state || ''}` : 'Domicilio no registrado';
+  const addressLines = pdf.splitTextToSize(addressText, 165);
+  pdf.text(addressLines, 20, y); y += Math.max(7, addressLines.length * 5 + 2);
+  pdf.text(`Paquetería: ${shippingName}`, 20, y); y += 7;
+  pdf.text(`RFC: ${billing?.rfc || 'XAXX010101000'}`, 20, y);
+  y += 12;
   pdf.setFont('helvetica', 'bold'); pdf.text('Productos', 20, y); y += 8;
   pdf.setFont('helvetica', 'normal');
   order.products.forEach((product) => {
     const productLines = pdf.splitTextToSize(`${product.quantity} × ${product.name}`, 125);
     pdf.text(productLines, 20, y);
-    pdf.text(money.format(product.price * product.quantity), 155, y);
+    const productGrossTotal = Number(product.price) * Number(product.quantity || 0);
+    pdf.text(money.format(productGrossTotal), 155, y);
     y += Math.max(7, productLines.length * 5 + 2);
   });
 
   pdf.line(20, y + 2, 190, y + 2); y += 12;
-  pdf.text('Subtotal', 20, y); pdf.text(money.format(order.subtotal), 155, y); y += 8;
+  const grossSubtotal = Number(order.subtotal) || 0;
+  const discountAmount = Number(order.discountAmount) || 0;
+  const discountedGrossProducts = Math.max(0, grossSubtotal - discountAmount);
+  const subtotalBeforeIva = discountedGrossProducts / 1.16;
+  const calculatedIvaAmount = discountedGrossProducts - subtotalBeforeIva;
   pdf.text(`Envío (${shippingName})`, 20, y); pdf.text(money.format(shippingCost), 155, y); y += 8;
-  pdf.text('IVA (16%)', 20, y); pdf.text(money.format(ivaAmount), 155, y); y += 10;
-  pdf.setFont('helvetica', 'bold'); pdf.text('Total final', 20, y); pdf.text(money.format(orderTotal), 155, y);
+  pdf.text('Subtotal antes de IVA', 20, y); pdf.text(money.format(subtotalBeforeIva), 155, y); y += 8;
+  if (discountAmount > 0) {
+    pdf.text(`Promoción aplicada${order.couponCode ? ` (${order.couponCode})` : ''}`, 20, y); pdf.text(`-${money.format(discountAmount)}`, 155, y); y += 8;
+  }
+  pdf.text('IVA (16%)', 20, y); pdf.text(money.format(Number(ivaAmount) || calculatedIvaAmount), 155, y); y += 9;
+  pdf.setFont('helvetica', 'bold'); pdf.text('Total (IVA incluido)', 20, y); pdf.text(money.format(orderTotal), 155, y);
   pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.text('Gracias por comprar en FIRSTPC.', 20, y + 18);
+  pdf.setFontSize(8); pdf.setTextColor(100, 116, 139);
+  const disclaimer = pdf.splitTextToSize('Este documento es una representación gráfica simulada con fines educativos.', 170);
+  pdf.text(disclaimer, 20, y + 29);
   pdf.save(`${order.orderNumber}.pdf`);
 };
 
-const ReceiptPdf = ({ order, address, paymentName, shippingName, shippingCost, ivaAmount, orderTotal }) => (
+const ReceiptPdf = ({ order, address, billing, paymentName, shippingName, shippingCost, ivaAmount, orderTotal }) => (
   <button
     type="button"
-    onClick={() => createReceiptPdf({ order, address, paymentName, shippingName, shippingCost, ivaAmount, orderTotal })}
+    onClick={() => createReceiptPdf({ order, address, billing, paymentName, shippingName, shippingCost, ivaAmount, orderTotal })}
     className="mt-8 w-full rounded-full bg-[#10B981] px-5 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(16,185,129,0.24)] transition hover:-translate-y-0.5 hover:bg-emerald-600"
   >
     Descargar Comprobante en PDF

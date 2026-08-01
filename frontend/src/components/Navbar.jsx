@@ -50,7 +50,7 @@ const Navbar = () => {
 
   const adminNavLinks = [
     { name: "Inicio", path: "/" },
-    { name: "Catalogo", path: "/admin" },
+    { name: "Catálogo", path: "/admin" },
     { name: "Inventario", path: "/admin/inventario" },
     { name: "Garantías (RMA)", path: "/admin/rma" },
     { name: "Armar PC", path: "/armar-pc" },

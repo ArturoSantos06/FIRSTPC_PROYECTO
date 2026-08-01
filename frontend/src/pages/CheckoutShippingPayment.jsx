@@ -5,6 +5,50 @@ import OrderSummary from '../components/Checkout/common/OrderSummary';
 import PaymentOptions from '../components/Checkout/Step3/PaymentOptions';
 import ShippingOptions, { shippingOptions } from '../components/Checkout/Step3/ShippingOptions';
 import { useCart } from '../context/CartContext';
+import { auth } from '../firebaseConfig';
+import { getCouponForUser } from '../services/couponService';
+
+const CouponFeedbackModal = ({ message, onClose }) => (
+  <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4 font-['Montserrat'] backdrop-blur-sm">
+    <div className="w-full max-w-sm rounded-[28px] bg-white p-7 text-center shadow-2xl">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-50 text-2xl text-amber-500">!</div>
+      <h2 className="mt-5 text-xl font-black text-slate-900">Código no disponible</h2>
+      <p className="mt-3 text-sm font-medium leading-6 text-slate-500">{message}</p>
+      <button type="button" onClick={onClose} className="mt-6 w-full rounded-full bg-emerald-500 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-600">Entendido</button>
+    </div>
+  </div>
+);
+
+const CouponField = ({ appliedCoupon, onApply }) => {
+  const [code, setCode] = useState('');
+  const [isApplying, setIsApplying] = useState(false);
+  const [feedback, setFeedback] = useState('');
+
+  const handleApply = async () => {
+    const normalizedCode = code.trim().toUpperCase();
+    if (!normalizedCode || !auth.currentUser?.uid) return;
+    setIsApplying(true);
+    try {
+      const coupon = await getCouponForUser(auth.currentUser.uid);
+      if (!coupon || coupon.code !== normalizedCode) throw new Error('El código no es válido para esta cuenta.');
+      if (coupon.status === 'used') throw new Error('Este código ya fue utilizado y no puede volver a usarse.');
+      onApply({ code: coupon.code, discountRate: Number(coupon.discountRate) || 0.10 });
+      setCode('');
+    } catch (error) {
+      setFeedback(error?.code === 'permission-denied' ? 'Firestore no permite consultar este cupón. Verifica que las reglas de welcomeCoupons estén publicadas.' : error.message || 'No pudimos validar el código.');
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  return <>
+    <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-emerald-500">Cupón o código de descuento</p>
+      {appliedCoupon ? <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-emerald-50 px-4 py-3"><span className="text-sm font-black text-emerald-700">{appliedCoupon.code} · 10% aplicado</span><span className="text-lg text-emerald-600">✓</span></div> : <div className="mt-3 flex gap-2"><input value={code} onChange={(event) => setCode(event.target.value.toUpperCase())} onKeyDown={(event) => { if (event.key === 'Enter') handleApply(); }} placeholder="Ej. FIRST10-ABC123" className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs font-bold uppercase outline-none focus:border-emerald-400 focus:bg-white" /><button type="button" onClick={handleApply} disabled={isApplying || !code.trim()} className="rounded-xl bg-slate-900 px-4 py-3 text-xs font-black text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50">{isApplying ? 'Validando...' : 'Aplicar'}</button></div>}
+    </div>
+    {feedback && <CouponFeedbackModal message={feedback} onClose={() => setFeedback('')} />}
+  </>;
+};
 
 const CheckoutShippingPayment = () => {
   const navigate = useNavigate();
@@ -13,6 +57,7 @@ const CheckoutShippingPayment = () => {
   const [selectedShipping, setSelectedShipping] = useState('estafeta');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card');
   const [currentStep, setCurrentStep] = useState(3);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   const shippingCost = useMemo(
     () => shippingOptions.find(({ id }) => id === selectedShipping)?.price || 0,
@@ -20,6 +65,7 @@ const CheckoutShippingPayment = () => {
   );
 
   const isPaymentValid = Boolean(selectedPaymentMethod);
+  const discountAmount = appliedCoupon ? totalAmount * appliedCoupon.discountRate : 0;
 
   const handlePaymentChange = (method) => setSelectedPaymentMethod(method);
 
@@ -32,6 +78,7 @@ const CheckoutShippingPayment = () => {
         selectedAddressId: checkoutState?.selectedAddressId,
         selectedShipping,
         selectedPaymentMethod,
+        coupon: appliedCoupon,
       },
     });
   };
@@ -47,6 +94,7 @@ const CheckoutShippingPayment = () => {
           uniqueProducts={cartItems.length}
           totalAmount={totalAmount}
           shippingCost={shippingCost}
+          discountAmount={discountAmount}
           showShipping
           buttonText="Ir al siguiente paso"
           onProceed={handleContinue}
@@ -72,6 +120,7 @@ const CheckoutShippingPayment = () => {
               <div className="mb-4"><p className="text-[11px] font-bold uppercase tracking-[0.25em] text-emerald-500">Paso 2</p><h3 className="mt-1 text-xl font-black text-slate-900">Forma de pago</h3></div>
               <PaymentOptions selectedPaymentMethod={selectedPaymentMethod} onPaymentMethodChange={handlePaymentChange} />
             </section>
+            <CouponField appliedCoupon={appliedCoupon} onApply={setAppliedCoupon} />
         </div>
     </CheckoutLayout>
   );
