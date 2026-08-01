@@ -18,6 +18,7 @@ import ProfileBilling from './pages/ProfileBilling';
 import PCBuilder from './components/PCBuilder/PCBuilder';
 import RecommendationWizard from './components/RecommendationWizard/RecommendationWizard';
 import AdminInventory from './pages/AdminInventory';
+import AdminOrderHistory from './pages/AdminOrderHistory';
 import Support from './pages/Support';
 import Footer from './components/Home/Footer';
 import { AboutPage, FAQPage, HowToBuyPage, PCBuilderGuidePage, PaymentShippingPage, RecommendationGuidePage, WarrantyPage } from './pages/InformationPages';
@@ -241,6 +242,7 @@ function App() {
           />
           <Route path="/admin/recomendador-settings" element={<RecommendationWizard />} />
           <Route path="/admin/inventario" element={<AdminInventory />} />
+          <Route path="/admin/compras" element={<AdminOrderHistory />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" />} />

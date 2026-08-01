@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, runTransaction, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { enviarOrdenDropshipping } from './dropshipService';
 import { getFulfillment, isDistributorIntegrated } from '../components/AdminInventory/inventory';
 import { db } from '../firebaseConfig';
@@ -16,6 +16,8 @@ export const createCheckoutOrder = async ({
   ivaAmount,
   orderTotal,
   userId,
+  customerName,
+  customerEmail,
   coupon,
   discountAmount = 0,
 }) => {
@@ -24,6 +26,7 @@ export const createCheckoutOrder = async ({
   const productReferences = purchasableItems.map((item) => doc(db, 'products', item.id));
   const productSnapshots = await Promise.all(productReferences.map((reference) => getDoc(reference)));
   const localQuantities = new Map();
+  const stockReservations = [];
   const dropshipItems = [];
 
   productSnapshots.forEach((productSnapshot, index) => {
@@ -46,6 +49,9 @@ export const createCheckoutOrder = async ({
     });
 
     localQuantities.set(item.id, localQuantity);
+    if (selectedPaymentMethod === 'oxxo' && localQuantity > 0) {
+      stockReservations.push({ id: item.id, quantity: localQuantity });
+    }
 
     if (distributorQuantity > 0) {
       if (!isDistributorIntegrated(productData) || !distributorSku) {
@@ -70,6 +76,10 @@ export const createCheckoutOrder = async ({
 
   const orderData = {
     userId,
+    customer: {
+      name: customerName || `${address?.firstName || ''} ${address?.lastName || ''}`.trim() || 'Cliente registrado',
+      email: customerEmail || '',
+    },
     orderNumber: `FPC-${createdAt.getTime().toString(36).toUpperCase()}-${Math.floor(Math.random() * 900 + 100)}`,
     products: cartItems.map(({ id, name, title, images, image, price, quantity }) => ({
       id,
@@ -93,6 +103,10 @@ export const createCheckoutOrder = async ({
     hasDropshipping: dropshipItems.length > 0,
     distributorOrderId,
     isReserved: selectedPaymentMethod === 'oxxo',
+    reservationExpiresAt: selectedPaymentMethod === 'oxxo'
+      ? Timestamp.fromDate(new Date(createdAt.getTime() + 24 * 60 * 60 * 1000))
+      : null,
+    stockReservations,
   };
 
   const orderReference = doc(collection(db, 'orders'));

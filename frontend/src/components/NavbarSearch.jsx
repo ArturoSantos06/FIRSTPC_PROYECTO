@@ -27,6 +27,7 @@ const NavbarSearch = ({ isAdmin, closeSignal }) => {
     ...(isAdmin ? [
       { name: 'Catálogo administrativo', detail: 'Gestionar productos', path: '/admin' },
       { name: 'Inventario', detail: 'Controlar existencias', path: '/admin/inventario' },
+      { name: 'Historial de compras', detail: 'Consultar y actualizar pedidos', path: '/admin/compras' },
     ] : []),
   ], [isAdmin]);
 

@@ -75,6 +75,8 @@ const CheckoutConfirmOrder = () => {
         ivaAmount,
         orderTotal,
         userId: auth.currentUser.uid,
+        customerName: `${address?.firstName || ''} ${address?.lastName || ''}`.trim(),
+        customerEmail: auth.currentUser.email || '',
         coupon,
         discountAmount,
       });

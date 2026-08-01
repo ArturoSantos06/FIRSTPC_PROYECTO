@@ -16,7 +16,7 @@ const loadImageAsDataUrl = async (imageUrl) => {
   });
 };
 
-export const createReceiptPdf = async ({ order, address, billing, paymentName, shippingName, shippingCost, ivaAmount, orderTotal }) => {
+export const createReceiptPdf = async ({ order, address, billing, paymentName, shippingName, shippingCost, ivaAmount, orderTotal, download = true, pdfWindow = null }) => {
   const pdf = new jsPDF();
   pdf.setTextColor(15, 23, 42);
 
@@ -81,7 +81,32 @@ export const createReceiptPdf = async ({ order, address, billing, paymentName, s
   pdf.setFontSize(8); pdf.setTextColor(100, 116, 139);
   const disclaimer = pdf.splitTextToSize('Este documento es una representación gráfica simulada con fines educativos.', 170);
   pdf.text(disclaimer, 20, y + 29);
-  pdf.save(`${order.orderNumber}.pdf`);
+  if (download) {
+    pdf.save(`${order.orderNumber}.pdf`);
+    return;
+  }
+
+  const pdfUrl = URL.createObjectURL(pdf.output('blob'));
+  if (pdfWindow && !pdfWindow.closed) {
+    pdfWindow.location.href = pdfUrl;
+  } else {
+    window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+  }
+};
+
+export const openReceiptPdf = async (options) => {
+  const pdfWindow = window.open('', '_blank');
+  if (pdfWindow) {
+    pdfWindow.document.title = 'Comprobante de compra';
+    pdfWindow.document.body.innerHTML = '<p style="font-family: sans-serif; padding: 2rem;">Generando comprobante...</p>';
+  }
+
+  try {
+    await createReceiptPdf({ ...options, download: false, pdfWindow });
+  } catch (error) {
+    if (pdfWindow && !pdfWindow.closed) pdfWindow.close();
+    throw error;
+  }
 };
 
 const ReceiptPdf = ({ order, address, billing, paymentName, shippingName, shippingCost, ivaAmount, orderTotal }) => (

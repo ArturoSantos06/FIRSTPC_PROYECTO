@@ -52,6 +52,7 @@ const Navbar = () => {
     { name: "Inicio", path: "/" },
     { name: "Catálogo", path: "/admin" },
     { name: "Inventario", path: "/admin/inventario" },
+    { name: "Compras", path: "/admin/compras" },
     { name: "Garantías (RMA)", path: "/admin/rma" },
     { name: "Armar PC", path: "/armar-pc" },
     { name: "Soporte", path: "/soporte" },
