@@ -72,7 +72,7 @@ const NavbarSearch = ({ isAdmin, closeSignal }) => {
   }, [links, normalizedSearch, products]);
 
   return <>
-    <button ref={buttonRef} type="button" onClick={() => setIsOpen((open) => !open)} aria-label="Buscar en FIRSTPC" aria-expanded={isOpen} className={`p-1 transition-colors duration-200 ${isOpen ? 'text-[#10B981]' : 'text-[#64748B] hover:text-[#10B981]'}`}>
+    <button ref={buttonRef} type="button" onClick={() => setIsOpen((open) => !open)} aria-label="Buscar en FIRSTPC" aria-expanded={isOpen} className={`ml-2 p-1 transition-colors duration-200 md:ml-3 ${isOpen ? 'text-[#10B981]' : 'text-[#64748B] hover:text-[#10B981]'}`}>
       <SearchIcon />
     </button>
     {isOpen && <div ref={popoverRef} className="absolute right-0 top-[calc(100%+0.75rem)] z-[60] w-[min(92vw,440px)] overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.16)]">

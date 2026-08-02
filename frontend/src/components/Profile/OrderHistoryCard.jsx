@@ -1,3 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
 import { createReceiptPdf } from '../Checkout/Step4/ReceiptPdf';
 
 const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
@@ -5,6 +8,7 @@ const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN
 const statusStyles = {
   Procesado: 'bg-emerald-50 text-emerald-700',
   Entregado: 'bg-emerald-50 text-emerald-700',
+  Reembolsado: 'bg-slate-100 text-slate-700',
   'Pendiente de pago': 'bg-amber-50 text-amber-700',
   Cancelado: 'bg-rose-50 text-rose-700',
 };
@@ -15,8 +19,37 @@ const formatDate = (value) => {
 };
 
 const OrderHistoryCard = ({ order }) => {
+  const navigate = useNavigate();
   const products = order.products || [];
+  const actionsRef = useRef(null);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState(products[0]?.id || '');
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (!actionsOpen) return undefined;
+    const closeOnOutsideClick = (event) => {
+      if (actionsRef.current && !actionsRef.current.contains(event.target)) setActionsOpen(false);
+    };
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+  }, [actionsOpen]);
+
   const status = order.status || 'Procesado';
+  const isReceived = status === 'Entregado';
+  const receivedDate = order.receivedAt?.toDate ? order.receivedAt.toDate() : order.receivedAt ? new Date(order.receivedAt) : order.createdAt?.toDate ? order.createdAt.toDate() : order.createdAt ? new Date(order.createdAt) : null;
+  const warrantyEnd = receivedDate && !Number.isNaN(receivedDate.getTime()) ? new Date(receivedDate.getFullYear() + 1, receivedDate.getMonth(), receivedDate.getDate()) : null;
+  const remainingWarranty = warrantyEnd ? Math.max(0, warrantyEnd.getTime() - now) : 0;
+  const remainingDays = Math.floor(remainingWarranty / 86_400_000);
+  const remainingHours = Math.floor((remainingWarranty % 86_400_000) / 3_600_000);
+  const remainingMinutes = Math.floor((remainingWarranty % 3_600_000) / 60_000);
+  const selectedProduct = products.find((product) => product.id === selectedProductId) || products[0];
+
+  useEffect(() => {
+    if (!isReceived) return undefined;
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, [isReceived]);
 
   const handleDownload = () => createReceiptPdf({
     order,
@@ -27,6 +60,22 @@ const OrderHistoryCard = ({ order }) => {
     ivaAmount: order.ivaAmount,
     orderTotal: order.totalPaid,
   });
+
+
+  const goToRequest = (type) => {
+    const orderNumber = order.orderNumber || order.id;
+    const product = selectedProduct?.name || 'Producto';
+    const params = new URLSearchParams({ orden: orderNumber, producto: product });
+    if (type === 'garantia') navigate(`/garantias-rma?${params.toString()}`);
+    else navigate(`/soporte?tipo=${type === 'devolucion' ? 'devolucion' : 'reporte'}&${params.toString()}`);
+    setActionsOpen(false);
+  };
+
+  const goToProduct = (action) => {
+    if (!selectedProduct?.id) return;
+    setActionsOpen(false);
+    navigate(`/producto/${selectedProduct.id}${action === 'review' ? '#opiniones' : ''}`);
+  };
 
   return (
     <article className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_14px_35px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(15,23,42,0.09)] sm:p-6">
@@ -40,8 +89,9 @@ const OrderHistoryCard = ({ order }) => {
           {products.length > 4 && <span className="ml-3 text-xs font-bold text-slate-400">+{products.length - 4} más</span>}
           {!products.length && <span className="text-xs font-semibold text-slate-400">Sin productos registrados</span>}
         </div>
-        <button type="button" onClick={handleDownload} className="shrink-0 rounded-full bg-emerald-500 px-4 py-2.5 text-xs font-black text-white shadow-[0_8px_20px_rgba(16,185,129,0.2)] transition hover:bg-emerald-600">↓ <span className="hidden sm:inline">Descargar Comprobante</span><span className="sm:hidden">PDF</span></button>
+        <div ref={actionsRef} className="relative flex flex-wrap justify-end gap-2"><button type="button" onClick={handleDownload} className="shrink-0 rounded-full bg-emerald-500 px-4 py-2.5 text-xs font-black text-white shadow-[0_8px_20px_rgba(16,185,129,0.2)] transition hover:bg-emerald-600">↓ <span className="hidden sm:inline">Descargar Comprobante</span><span className="sm:hidden">PDF</span></button>{isReceived && <><button type="button" onClick={() => setActionsOpen((open) => !open)} aria-expanded={actionsOpen} className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-emerald-400 hover:text-emerald-600">Acciones <ChevronDown size={14} className={actionsOpen ? 'rotate-180 transition-transform' : 'transition-transform'} /></button>{actionsOpen && <div className="absolute right-0 top-full z-30 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-2 font-['Montserrat'] shadow-[0_16px_40px_rgba(15,23,42,0.14)]">{products.length > 1 && <select aria-label="Seleccionar producto" value={selectedProductId} onChange={(event) => setSelectedProductId(event.target.value)} className="mb-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-emerald-400">{products.map((product, index) => <option key={`${product.id || product.name}-${index}`} value={product.id}>{product.name}</option>)}</select>}<button type="button" onClick={() => goToRequest('devolucion')} className="block w-full rounded-xl px-3 py-2.5 text-left text-xs font-black text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700">Devolución</button><button type="button" onClick={() => goToRequest('reporte')} className="block w-full rounded-xl px-3 py-2.5 text-left text-xs font-black text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700">Reportar problema</button><button type="button" onClick={() => goToProduct('review')} className="block w-full rounded-xl px-3 py-2.5 text-left text-xs font-black text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700">Calificar producto</button><button type="button" onClick={() => goToProduct('repurchase')} className="block w-full rounded-xl px-3 py-2.5 text-left text-xs font-black text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700">Volver a comprar</button></div>}</>}</div>
       </div>
+      {isReceived && <p className={`mt-4 text-xs font-bold ${remainingWarranty > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>{warrantyEnd ? remainingWarranty > 0 ? `Garantía restante: ${remainingDays} días, ${remainingHours} h y ${remainingMinutes} min` : 'Garantía vencida' : 'Garantía de 1 año'}</p>}
     </article>
   );
 };

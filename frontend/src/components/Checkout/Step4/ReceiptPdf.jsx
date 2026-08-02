@@ -3,7 +3,16 @@ import logo from '../../../assets/logof.png';
 
 const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
-const dateLabel = (date) => new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' }).format(date || new Date());
+const normalizeDate = (value) => {
+  if (value?.toDate) return value.toDate();
+  if (value instanceof Date) return value;
+  if (typeof value === 'number') return new Date(value);
+  if (typeof value === 'string') return new Date(value);
+  if (value?.seconds) return new Date(value.seconds * 1000);
+  return new Date();
+};
+
+const dateLabel = (date) => new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' }).format(normalizeDate(date));
 
 const loadImageAsDataUrl = async (imageUrl) => {
   const response = await fetch(imageUrl);

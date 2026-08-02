@@ -14,7 +14,7 @@ const gmailAppPassword = defineSecret('GMAIL_APP_PASSWORD');
 exports.sendSupportEmail = onCall(
   { secrets: [gmailAppPassword], region: 'us-central1' },
   async (request) => {
-    const { name, email, subject, message } = request.data || {};
+    const { name, email, subject, message, attachments = [] } = request.data || {};
 
     if (![name, email, subject, message].every((value) => typeof value === 'string' && value.trim())) {
       throw new HttpsError('invalid-argument', 'Todos los campos son obligatorios.');
@@ -22,6 +22,9 @@ exports.sendSupportEmail = onCall(
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       throw new HttpsError('invalid-argument', 'El correo electrónico no es válido.');
+    }
+    if (!Array.isArray(attachments) || attachments.length > 5 || attachments.some((attachment) => !attachment || typeof attachment.url !== 'string' || typeof attachment.name !== 'string')) {
+      throw new HttpsError('invalid-argument', 'Los archivos adjuntos no son válidos.');
     }
 
     const transporter = nodemailer.createTransport({
@@ -38,7 +41,12 @@ exports.sendSupportEmail = onCall(
         to: BRAND_EMAIL,
         replyTo: email.trim(),
         subject: `[Soporte FIRSTPC] ${subject.trim()}`,
-        text: `Nombre: ${name.trim()}\nCorreo: ${email.trim()}\n\n${message.trim()}`,
+        text: `Nombre: ${name.trim()}\nCorreo: ${email.trim()}\n\n${message.trim()}${attachments.length ? `\n\nArchivos adjuntos:\n${attachments.map((attachment) => `- ${attachment.name}: ${attachment.url}`).join('\n')}` : ''}`,
+        attachments: attachments.map((attachment) => ({
+          filename: attachment.name,
+          path: attachment.url,
+          contentType: attachment.type || undefined,
+        })),
       });
 
       return { success: true };
@@ -48,6 +56,46 @@ exports.sendSupportEmail = onCall(
     }
   },
 );
+
+// Publica opiniones únicamente después de comprobar que el usuario compró el producto.
+exports.submitProductReview = onCall({ region: 'us-central1' }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Inicia sesión para opinar.');
+  const { productId, rating, comment } = request.data || {};
+  const numericRating = Number(rating);
+  const cleanComment = typeof comment === 'string' ? comment.trim() : '';
+  if (typeof productId !== 'string' || !productId || !Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5 || cleanComment.length < 5 || cleanComment.length > 800) {
+    throw new HttpsError('invalid-argument', 'La opinión no tiene un formato válido.');
+  }
+
+  const productRef = db.doc(`products/${productId}`);
+  const reviewRef = db.doc(`products/${productId}/reviews/${request.auth.uid}`);
+  const userReviewRef = db.doc(`users/${request.auth.uid}/reviews/${productId}`);
+  const productSnapshot = await productRef.get();
+  if (!productSnapshot.exists) throw new HttpsError('not-found', 'El producto no existe.');
+
+  const ordersSnapshot = await db.collection('orders').where('userId', '==', request.auth.uid).get();
+  const purchased = ordersSnapshot.docs.some((orderSnapshot) => {
+    const order = orderSnapshot.data();
+    const validStatus = order.status === 'Entregado';
+    return validStatus && (order.products || []).some((item) => item.id === productId);
+  });
+  if (!purchased) throw new HttpsError('permission-denied', 'Solo las personas que compren este producto pueden opinar.');
+
+  await db.runTransaction(async (transaction) => {
+    const [currentProduct, previousReview] = await Promise.all([transaction.get(productRef), transaction.get(reviewRef)]);
+    const product = currentProduct.data() || {};
+    const previousRating = previousReview.exists ? Number(previousReview.data().rating) : null;
+    const count = Number(product.reviewsCount) || 0;
+    const total = Number.isFinite(Number(product.ratingTotal)) ? Number(product.ratingTotal) : (Number(product.rating) || 0) * count;
+    const nextCount = previousRating === null ? count + 1 : count;
+    const nextTotal = previousRating === null ? total + numericRating : total - previousRating + numericRating;
+    const review = { userId: request.auth.uid, authorName: request.auth.token.name || request.auth.token.email?.split('@')[0] || 'Cliente verificado', rating: numericRating, comment: cleanComment, verifiedPurchase: true, updatedAt: FieldValue.serverTimestamp() };
+    transaction.set(reviewRef, review, { merge: true });
+    transaction.set(userReviewRef, { productId, productName: product.name || 'Producto', productImage: product.images?.[0] || product.image || '', ...review }, { merge: true });
+    transaction.update(productRef, { rating: Number((nextTotal / nextCount).toFixed(1)), ratingTotal: nextTotal, reviewsCount: nextCount, updatedAt: FieldValue.serverTimestamp() });
+  });
+  return { success: true };
+});
 
 // Libera automáticamente las piezas reservadas para pedidos OXXO que no fueron pagados.
 // Se ejecuta cada 15 minutos, por lo que una reserva se libera como máximo 15 minutos

@@ -6,6 +6,7 @@ import BrandAbout from '../components/ProductDetail/BrandAbout';
 import ProductDescription from '../components/ProductDetail/ProductDescription';
 import ProductHero from '../components/ProductDetail/ProductHero';
 import TechSpecsTable from '../components/ProductDetail/TechSpecsTable';
+import ProductReviews from '../components/ProductDetail/ProductReviews';
 import { useCart } from '../context/CartContext';
 import { db } from '../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
@@ -54,7 +55,7 @@ const ProductDetailPage = () => {
 
   const addProductToCart = useCallback((quantity) => { if (product) addItem(product, quantity); }, [addItem, product]);
 
-  return <main className="min-h-screen bg-[#F8FAFC] font-['Montserrat'] antialiased"><Navbar /><div className="mx-auto max-w-7xl space-y-12 px-4 pb-20 pt-32 md:px-6 lg:px-8">{loading && <DetailSkeleton />}{!loading && error && <div className="rounded-[32px] border border-rose-100 bg-white p-10 text-center shadow-sm"><p className="text-4xl">⌁</p><h1 className="mt-4 text-2xl font-black text-slate-900">Producto no disponible</h1><p className="mx-auto mt-2 max-w-md text-sm font-medium leading-6 text-slate-500">{error}</p><button type="button" onClick={() => navigate('/catalogo')} className="mt-6 rounded-full bg-emerald-500 px-6 py-3 text-sm font-black text-white transition duration-200 hover:bg-emerald-600">Explorar catálogo</button></div>}{!loading && !error && product && <><ProductHero product={product} onAddToCart={addProductToCart} onBack={() => navigate(-1)} /><ProductDescription description={product.description} /><TechSpecsTable fullSpecs={product.fullSpecs} /><BrandAbout brand={product.brand} brandLogo={product.brandLogo} brandAboutText={product.brandAboutText} /></>}</div><Footer /></main>;
+  return <main className="min-h-screen bg-[#F8FAFC] font-['Montserrat'] antialiased"><Navbar /><div className="mx-auto max-w-7xl space-y-12 px-4 pb-20 pt-32 md:px-6 lg:px-8">{loading && <DetailSkeleton />}{!loading && error && <div className="rounded-[32px] border border-rose-100 bg-white p-10 text-center shadow-sm"><p className="text-4xl">⌁</p><h1 className="mt-4 text-2xl font-black text-slate-900">Producto no disponible</h1><p className="mx-auto mt-2 max-w-md text-sm font-medium leading-6 text-slate-500">{error}</p><button type="button" onClick={() => navigate('/catalogo')} className="mt-6 rounded-full bg-emerald-500 px-6 py-3 text-sm font-black text-white transition duration-200 hover:bg-emerald-600">Explorar catálogo</button></div>}{!loading && !error && product && <><ProductHero product={product} onAddToCart={addProductToCart} onBack={() => navigate(-1)} /><ProductDescription description={product.description} /><TechSpecsTable fullSpecs={product.fullSpecs} /><BrandAbout brand={product.brand} brandLogo={product.brandLogo} brandAboutText={product.brandAboutText} /><ProductReviews product={product} /></>}</div><Footer /></main>;
 };
 
 export default ProductDetailPage;

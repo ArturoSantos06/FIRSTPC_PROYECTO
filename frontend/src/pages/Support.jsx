@@ -1,10 +1,13 @@
-import { useContext, useState } from 'react';
-import { CheckCircle2, Mail, MessageSquare, Send, User, X } from 'lucide-react';
+import { useContext, useEffect, useState } from 'react';
+import { CheckCircle2, Mail, Paperclip, Send, User, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Home/Footer';
 import { AuthContext } from '../context/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import app from '../firebaseConfig';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { storage } from '../firebaseConfig';
 
 const BRAND_EMAIL = 'contacto.firstpc@gmail.com';
 
@@ -14,18 +17,50 @@ const initialForm = {
   subject: '',
   message: '',
 };
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILES = 5;
 
 const Support = () => {
   const { user } = useContext(AuthContext);
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState(() => ({ ...initialForm, email: user?.email || '' }));
   const [isSent, setIsSent] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [attachments, setAttachments] = useState([]);
+  const requestType = searchParams.get('tipo');
+  const allowsAttachments = requestType === 'devolucion' || requestType === 'reporte';
+
+  useEffect(() => {
+    const type = searchParams.get('tipo');
+    const order = searchParams.get('orden');
+    const product = searchParams.get('producto');
+    if (!type || !order || !product) return;
+    const typeLabel = type === 'devolucion' ? 'Devolución' : 'Reporte';
+    setForm((current) => ({
+      ...current,
+      subject: `[${typeLabel} Solicitud] Orden #${order}`,
+      message: `Hola equipo de FirstPC, requiero ayuda con mi orden #${order} para el producto ${product}.\n\nDetalles adicionales:\n`,
+    }));
+  }, [searchParams]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
   };
+
+  const handleFiles = (event) => {
+    const selectedFiles = Array.from(event.target.files || []);
+    const validFiles = selectedFiles.filter((file) => file.type.startsWith('image/') || file.type.startsWith('video/'));
+    const oversized = validFiles.find((file) => file.size > MAX_FILE_SIZE);
+    if (oversized) { setErrorMessage(`El archivo ${oversized.name} supera el límite de 10 MB.`); event.target.value = ''; return; }
+    if (validFiles.length > MAX_FILES || attachments.length + validFiles.length > MAX_FILES) { setErrorMessage(`Puedes adjuntar un máximo de ${MAX_FILES} archivos.`); event.target.value = ''; return; }
+    setErrorMessage('');
+    setAttachments((current) => [...current, ...validFiles]);
+    event.target.value = '';
+  };
+
+  const removeAttachment = (index) => setAttachments((current) => current.filter((_, fileIndex) => fileIndex !== index));
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -33,9 +68,18 @@ const Support = () => {
     setIsSending(true);
 
     try {
+      let uploadedAttachments = [];
+      if (allowsAttachments && attachments.length) {
+        if (!user?.uid) throw new Error('Debes iniciar sesión para adjuntar archivos.');
+        uploadedAttachments = await Promise.all(attachments.map(async (file) => {
+          const fileRef = ref(storage, `supportAttachments/${user.uid}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`);
+          const snapshot = await uploadBytes(fileRef, file, { contentType: file.type });
+          return { name: file.name, type: file.type, url: await getDownloadURL(snapshot.ref) };
+        }));
+      }
       const functions = getFunctions(app, 'us-central1');
       const sendSupportEmail = httpsCallable(functions, 'sendSupportEmail');
-      await sendSupportEmail(form);
+      await sendSupportEmail({ ...form, attachments: uploadedAttachments });
       setIsSent(true);
     } catch (error) {
       console.error('Error enviando solicitud de soporte:', error);
@@ -85,6 +129,7 @@ const Support = () => {
               <label htmlFor="message" className="mb-2 block text-xs font-black text-slate-700">Mensaje</label>
               <textarea id="message" name="message" value={form.message} onChange={handleChange} placeholder="Escribe aquí los detalles de tu solicitud..." rows={6} required className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100" />
             </div>
+            {allowsAttachments && <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><label htmlFor="support-attachments" className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-xs font-black text-slate-700 transition hover:border-emerald-400 hover:text-emerald-700"><Paperclip size={15} /> Adjuntar imágenes o videos</label><input id="support-attachments" type="file" accept="image/*,video/*" multiple onChange={handleFiles} className="sr-only" /><p className="mt-2 text-xs font-medium text-slate-400">Máximo {MAX_FILES} archivos, hasta 10 MB cada uno.</p>{attachments.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{attachments.map((file, index) => <button key={`${file.name}-${index}`} type="button" onClick={() => removeAttachment(index)} className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-rose-50 hover:text-rose-600">{file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB ×</button>)}</div>}</div>}
             {errorMessage && <p role="alert" className="rounded-2xl bg-rose-50 px-4 py-3 text-xs font-bold text-rose-600">{errorMessage}</p>}
             <button type="submit" disabled={isSending} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 px-6 py-3.5 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:bg-emerald-600 disabled:cursor-wait disabled:opacity-60">
               {isSending ? 'Enviando mensaje...' : 'Enviar mensaje'} <Send size={16} />
@@ -95,7 +140,7 @@ const Support = () => {
 
       <div className="mt-24"><Footer /></div>
 
-      {isSent && <SuccessModal onClose={() => { setIsSent(false); setForm((current) => ({ ...initialForm, email: current.email })); }} />}
+      {isSent && <SuccessModal onClose={() => { setIsSent(false); setForm((current) => ({ ...initialForm, email: current.email })); setAttachments([]); }} />}
     </main>
   );
 };

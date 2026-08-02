@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { arrayRemove, collection, documentId, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
-import { Heart, Trash2, X } from 'lucide-react';
+import { Heart, MessageSquare, Star, Trash2, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import OrderHistoryCard from '../components/Profile/OrderHistoryCard';
 import FavoriteButton from '../components/FavoriteButton';
@@ -43,11 +43,13 @@ const UserProfile = ({ initialTab = 'orders' }) => {
   const [orders, setOrders] = useState([]);
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [configurations, setConfigurations] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [deletingConfigurationId, setDeletingConfigurationId] = useState('');
   const [configurationToDelete, setConfigurationToDelete] = useState(null);
   const [isLoadingOrders, setIsLoadingOrders] = useState(initialTab === 'orders');
   const [isLoadingFavorites, setIsLoadingFavorites] = useState(initialTab === 'favorites');
   const [isLoadingConfigurations, setIsLoadingConfigurations] = useState(initialTab === 'configurations');
+  const [isLoadingReviews, setIsLoadingReviews] = useState(initialTab === 'reviews');
   const [error, setError] = useState('');
   const { favoriteIds, loading: isLoadingFavoriteIds } = useFavorites();
 
@@ -86,6 +88,20 @@ const UserProfile = ({ initialTab = 'orders' }) => {
   }, [activeTab]);
 
   useEffect(() => {
+    if (activeTab !== 'reviews') return;
+    const loadReviews = async () => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) { setIsLoadingReviews(false); return; }
+      try {
+        const snapshot = await getDocs(collection(db, 'users', userId, 'reviews'));
+        setReviews(snapshot.docs.map((review) => ({ id: review.id, ...review.data() })));
+      } catch (loadError) { console.error('Error al cargar las opiniones:', loadError); setError('No fue posible cargar tus opiniones. Intenta nuevamente.'); }
+      finally { setIsLoadingReviews(false); }
+    };
+    loadReviews();
+  }, [activeTab]);
+
+  useEffect(() => {
     if (activeTab !== 'favorites') return;
     if (isLoadingFavoriteIds) return;
     const loadFavoriteProducts = async () => {
@@ -117,7 +133,7 @@ const UserProfile = ({ initialTab = 'orders' }) => {
   }, [activeTab]);
 
   const favoritesLoading = isLoadingFavorites || isLoadingFavoriteIds;
-  return <section className="w-full font-['Montserrat']"><div className="overflow-hidden rounded-[32px] border border-slate-200/70 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]"><div className="border-b border-slate-100 bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(255,255,255,0.98))] px-6 py-6 sm:px-8"><p className="text-[11px] font-bold uppercase tracking-[0.34em] text-emerald-500">Mi cuenta</p><h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{activeTab === 'favorites' ? 'Mis favoritos' : activeTab === 'configurations' ? 'Mis PCs configuradas' : 'Mis compras'}</h1><p className="mt-1 text-sm font-medium text-slate-500">{activeTab === 'favorites' ? 'Guarda los componentes que quieres revisar después.' : activeTab === 'configurations' ? 'Consulta las configuraciones que guardaste desde el PC Builder.' : 'Consulta tus pedidos y descarga nuevamente tus comprobantes.'}</p></div><div className="p-4 sm:p-6 lg:p-8">
+  return <section className="w-full font-['Montserrat']"><div className="overflow-visible rounded-[32px] border border-slate-200/70 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]"><div className="border-b border-slate-100 bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(255,255,255,0.98))] px-6 py-6 sm:px-8"><p className="text-[11px] font-bold uppercase tracking-[0.34em] text-emerald-500">Mi cuenta</p><h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{activeTab === 'favorites' ? 'Mis favoritos' : activeTab === 'configurations' ? 'Mis PCs configuradas' : activeTab === 'reviews' ? 'Mis opiniones' : 'Mis compras'}</h1><p className="mt-1 text-sm font-medium text-slate-500">{activeTab === 'favorites' ? 'Guarda los componentes que quieres revisar después.' : activeTab === 'configurations' ? 'Consulta las configuraciones que guardaste desde el PC Builder.' : activeTab === 'reviews' ? 'Opiniones que has compartido sobre tus compras.' : 'Consulta tus pedidos y descarga nuevamente tus comprobantes.'}</p></div><div className="p-4 sm:p-6 lg:p-8">
     {activeTab === 'orders' && isLoadingOrders && <div className="grid gap-4 md:grid-cols-2"><div className="h-40 animate-pulse rounded-[24px] bg-slate-100" /><div className="h-40 animate-pulse rounded-[24px] bg-slate-100" /></div>}
     {activeTab === 'orders' && !isLoadingOrders && error && <div className="rounded-[24px] bg-rose-50 p-6 text-center text-sm font-bold text-rose-700">{error}</div>}
     {activeTab === 'orders' && !isLoadingOrders && !error && orders.length > 0 && <div className="grid gap-4 md:grid-cols-2">{orders.map((order) => <OrderHistoryCard key={order.id} order={order} />)}</div>}
@@ -130,6 +146,9 @@ const UserProfile = ({ initialTab = 'orders' }) => {
     {activeTab === 'configurations' && !isLoadingConfigurations && error && <div className="rounded-[24px] bg-rose-50 p-6 text-center text-sm font-bold text-rose-700">{error}</div>}
     {activeTab === 'configurations' && !isLoadingConfigurations && !error && configurations.length > 0 && <div className="grid gap-4 md:grid-cols-2">{configurations.map((configuration) => <ConfigurationCard key={configuration.id} configuration={configuration} onEdit={editConfiguration} onAddToCart={addConfigurationToCart} onDelete={(item) => setConfigurationToDelete(item)} deleting={deletingConfigurationId === configuration.id} />)}</div>}
     {activeTab === 'configurations' && !isLoadingConfigurations && !error && configurations.length === 0 && <EmptyState title="Aún no tienes PCs configuradas" message="Arma una PC y guárdala desde el resumen final del configurador." />}
+    {activeTab === 'reviews' && isLoadingReviews && <div className="h-40 animate-pulse rounded-[24px] bg-slate-100" />}
+    {activeTab === 'reviews' && !isLoadingReviews && !error && reviews.length > 0 && <div className="space-y-4">{reviews.map((review) => <article key={review.id} className="rounded-[24px] border border-slate-100 p-5"><div className="flex items-start gap-4"><img src={review.productImage || 'https://via.placeholder.com/100?text=PC'} alt="" className="h-16 w-16 rounded-2xl bg-slate-50 object-contain p-2" /><div className="min-w-0 flex-1"><h2 className="font-black text-slate-900">{review.productName}</h2><div className="mt-1 flex gap-1 text-amber-400">{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={15} fill={star <= review.rating ? 'currentColor' : 'none'} />)}</div><p className="mt-3 text-sm font-medium leading-6 text-slate-600">{review.comment}</p><span className="mt-2 inline-flex items-center gap-1 text-xs font-black text-emerald-600"><MessageSquare size={13} /> Compra verificada</span></div></div></article>)}</div>}
+    {activeTab === 'reviews' && !isLoadingReviews && !error && reviews.length === 0 && <EmptyState title="Aún no tienes opiniones" message="Cuando compres un producto podrás compartir tu experiencia desde su página." />}
     <DeleteConfigurationModal configuration={configurationToDelete} loading={Boolean(deletingConfigurationId)} onCancel={() => { if (!deletingConfigurationId) setConfigurationToDelete(null); }} onConfirm={() => deleteConfiguration(configurationToDelete)} />
   </div></div></section>;
 };

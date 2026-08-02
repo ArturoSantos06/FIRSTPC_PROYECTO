@@ -66,6 +66,7 @@ function App() {
         <Route path="/guia-pc-builder" element={<PCBuilderGuidePage />} />
         <Route path="/guia-recomendador" element={<RecommendationGuidePage />} />
         <Route path="/garantias" element={<WarrantyPage />} />
+        <Route path="/garantias-rma" element={<WarrantyPage />} />
 
         <Route
           path="/soporte"
@@ -180,6 +181,15 @@ function App() {
                 </div>
                 <div className="mt-12"><Footer /></div>
               </div>
+            ) : <Navigate to="/login" replace />
+          }
+        />
+
+        <Route
+          path="/perfil/opiniones"
+          element={
+            user ? (
+              <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 pb-0 px-4 md:px-6 lg:px-10"><Navbar /><div className="mx-auto max-w-7xl"><UserProfile initialTab="reviews" /></div><div className="mt-12"><Footer /></div></div>
             ) : <Navigate to="/login" replace />
           }
         />
