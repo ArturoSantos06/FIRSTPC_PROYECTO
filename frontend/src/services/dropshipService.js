@@ -2,6 +2,16 @@ const endpoint_distribuidor =
   import.meta.env.VITE_DISTRIBUTOR_API_URL ||
   'https://us-central1-genesis-hardware.cloudfunctions.net/pedidos_dropship';
 
+const warehouseAddress = {
+  name: 'FIRSTPC Almacén',
+  street: 'Av. Resurgimiento',
+  exteriorNumber: '611',
+  neighborhood: 'Bosques de Campeche',
+  city: 'San Francisco de Campeche',
+  state: 'Campeche',
+  postalCode: '24030',
+};
+
 const leer_respuesta = async (respuesta) => {
   const texto_respuesta = await respuesta.text();
 
@@ -34,7 +44,6 @@ const leer_respuesta = async (respuesta) => {
 
 export async function enviarOrdenDropshipping(
   items_dropship = [],
-  direccion_entrega = {},
 ) {
   const items = items_dropship.map((item) => ({
     sku_distribuidor: item.distributorSku,
@@ -53,10 +62,12 @@ export async function enviarOrdenDropshipping(
   const datos_pedido = {
     items,
     direccion_entrega: {
-      nombre: `${direccion_entrega.firstName || ''} ${direccion_entrega.lastName || ''}`.trim() || 'Cliente Final',
-      calle: `${direccion_entrega.street || ''} ${direccion_entrega.exteriorNumber || ''}`.trim() || 'Dirección no provista',
-      ciudad: direccion_entrega.city || 'Campeche',
-      codigo_postal: direccion_entrega.postalCode || '24000',
+      nombre: warehouseAddress.name,
+      calle: `${warehouseAddress.street} ${warehouseAddress.exteriorNumber}`,
+      colonia: warehouseAddress.neighborhood,
+      ciudad: warehouseAddress.city,
+      estado: warehouseAddress.state,
+      codigo_postal: warehouseAddress.postalCode,
     },
   };
 

@@ -56,7 +56,15 @@ service cloud.firestore {
         && request.resource.data.userId == request.auth.uid;
       allow get, list: if isAdmin()
         || (request.auth != null && resource.data.userId == request.auth.uid);
-      allow update: if isAdmin();
+      allow update: if isAdmin()
+        || (request.auth != null
+          && resource.data.userId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'hasActiveRma', 'rmaStatus', 'rmaTicket', 'rmaFolio', 'rmaCreatedAt'
+          ])
+          && resource.data.hasActiveRma != true
+          && request.resource.data.hasActiveRma == true
+          && request.resource.data.rmaStatus == 'PENDING');
       allow delete: if false;
     }
 

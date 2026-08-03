@@ -28,6 +28,7 @@ export const createCheckoutOrder = async ({
   const localQuantities = new Map();
   const stockReservations = [];
   const dropshipItems = [];
+  const fulfillmentByProduct = new Map();
 
   productSnapshots.forEach((productSnapshot, index) => {
     const item = purchasableItems[index];
@@ -49,6 +50,7 @@ export const createCheckoutOrder = async ({
     });
 
     localQuantities.set(item.id, localQuantity);
+    fulfillmentByProduct.set(item.id, { requestedQuantity: quantity, localQuantity, distributorQuantity });
     if (selectedPaymentMethod === 'oxxo' && localQuantity > 0) {
       stockReservations.push({ id: item.id, quantity: localQuantity });
     }
@@ -70,7 +72,7 @@ export const createCheckoutOrder = async ({
   let distributorOrderId = null;
   if (dropshipItems.length > 0) {
     console.log('Enviando petición de Dropshipping al distribuidor...', dropshipItems);
-    const distributorResponse = await enviarOrdenDropshipping(dropshipItems, address);
+    const distributorResponse = await enviarOrdenDropshipping(dropshipItems);
     distributorOrderId = distributorResponse.distributorOrderId || distributorResponse.orderId || null;
   }
 
@@ -87,6 +89,9 @@ export const createCheckoutOrder = async ({
       image: images?.[0] || image || '',
       price: Number(price) || 0,
       quantity,
+      requestedQuantity: fulfillmentByProduct.get(id)?.requestedQuantity || Number(quantity) || 0,
+      localQuantity: fulfillmentByProduct.get(id)?.localQuantity || 0,
+      distributorQuantity: fulfillmentByProduct.get(id)?.distributorQuantity || 0,
     })),
     shipping: { carrier: shipping.name, id: shipping.id, cost: shippingCost, address },
     billing: billing || { note: 'Factura de público general con RFC genérico' },

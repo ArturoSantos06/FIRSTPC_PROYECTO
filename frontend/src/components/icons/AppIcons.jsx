@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowUpRight, FileText, Headset, Heart, MapPin, MessageSquare, PackageCheck, Pencil, Plus, Share2, ShieldCheck, Star, Trash2, Truck, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowUpRight, FileText, Headset, Heart, MapPin, MessageSquare, Monitor, PackageCheck, Pencil, Plus, Share2, ShieldCheck, ShoppingBag, Star, Trash2, Truck, X } from 'lucide-react';
 
 const Svg = ({ children, className = 'h-5 w-5', ...props }) => <svg viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" {...props}>{children}</svg>;
 
@@ -23,6 +23,9 @@ export const CloseIcon = (props) => <X {...props} />;
 export const FileIcon = (props) => <FileText {...props} />;
 export const LocationIcon = (props) => <MapPin {...props} />;
 export const AddIcon = (props) => <Plus {...props} />;
+export const OrderIcon = (props) => <ShoppingBag {...props} />;
+export const ConfigIcon = (props) => <Monitor {...props} />;
+export const WarningIcon = (props) => <AlertTriangle {...props} />;
 
 export const CategoryIcon = ({ icon }) => {
   const common = 'h-4 w-4 stroke-[1.8]';

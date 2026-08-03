@@ -1,6 +1,6 @@
 import { useContext, useCallback, useEffect, useState } from 'react';
 import logoStore from '../assets/logof.png';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { signOut } from "firebase/auth";
 import { auth } from "/src/firebaseConfig.js"; 
 import { AuthContext } from '../context/AuthContext';
@@ -14,7 +14,6 @@ import { CartIcon } from './icons/AppIcons';
 const Navbar = () => {
   const { user } = useContext(AuthContext);
   const { totalItems } = useCart();
-  const navigate = useNavigate();
   const location = useLocation();
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -30,11 +29,11 @@ const Navbar = () => {
   const handleSignOut = useCallback(async () => {
     try {
       await signOut(auth);
-      navigate('/');
+      window.location.replace('/');
     } catch (error) {
       console.error("Error signing out: ", error);
     }
-  }, [navigate]);
+  }, []);
 
   const clientNavLinks = [
     { name: "Inicio", path: "/" },
@@ -48,7 +47,6 @@ const Navbar = () => {
     { name: "Catálogo", path: "/admin" },
     { name: "Inventario", path: "/admin/inventario" },
     { name: "Compras", path: "/admin/compras" },
-    { name: "Garantías (RMA)", path: "/admin/rma" },
     { name: "Armar PC", path: "/armar-pc" },
     { name: "Soporte", path: "/soporte" },
   ];
