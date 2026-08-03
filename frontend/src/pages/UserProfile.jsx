@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { arrayRemove, collection, documentId, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
-import { Heart, MessageSquare, Star, Trash2, X } from 'lucide-react';
+import { CloseIcon as X, DeleteIcon as Trash2, FavoriteIcon as Heart, RatingIcon as Star, ReviewIcon as MessageSquare } from '../components/icons/AppIcons';
 import { Link, useNavigate } from 'react-router-dom';
 import OrderHistoryCard from '../components/Profile/OrderHistoryCard';
 import FavoriteButton from '../components/FavoriteButton';

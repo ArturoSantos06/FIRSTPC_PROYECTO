@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, Pencil, Plus } from 'lucide-react';
+import { AddIcon as Plus, EditIcon as Pencil, FileIcon as FileText } from '../components/icons/AppIcons';
 import { collection, getDocs, query, serverTimestamp, setDoc, doc, where } from 'firebase/firestore';
 import BillingModal from '../components/Checkout/Step2/BillingModal';
 import { auth, db } from '../firebaseConfig';

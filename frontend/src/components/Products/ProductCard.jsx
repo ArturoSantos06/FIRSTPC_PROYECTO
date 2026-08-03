@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import FavoriteButton from '../FavoriteButton';
 import { canAddToCart } from '../AdminInventory/inventory';
+import { EditIcon } from '../icons/AppIcons';
 
 const ProductCard = ({ product, isAdmin, onEditProduct }) => {
   const { addItem } = useCart();
@@ -29,7 +30,7 @@ const ProductCard = ({ product, isAdmin, onEditProduct }) => {
       <div className="absolute -top-10 -right-10 h-24 w-24 bg-[#A7F3D0]/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 z-0" />
 
       {isAdmin && (
-        <button type="button" onClick={(event) => { event.stopPropagation(); onEditProduct(product); }} className="absolute right-4 top-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-white/95 text-[14px] font-black text-slate-500 shadow-[0_12px_26px_rgba(15,23,42,0.1)] transition hover:-translate-y-0.5 hover:border-[#10B981]/30 hover:text-[#10B981]" aria-label={`Editar ${product.name}`}>✎</button>
+        <button type="button" onClick={(event) => { event.stopPropagation(); onEditProduct(product); }} className="absolute right-4 top-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-white/95 text-slate-500 shadow-[0_12px_26px_rgba(15,23,42,0.1)] transition hover:-translate-y-0.5 hover:border-[#10B981]/30 hover:text-[#10B981]" aria-label={`Editar ${product.name}`}><EditIcon size={16} /></button>
       )}
 
       <div className={`absolute top-4 z-20 ${isAdmin ? 'right-16' : 'right-4'}`}><FavoriteButton productId={product.id} /></div>

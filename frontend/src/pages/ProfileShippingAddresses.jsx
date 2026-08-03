@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { collection, deleteDoc, doc, getDocs, query, where, addDoc, updateDoc } from 'firebase/firestore';
-import { MapPin, Plus } from 'lucide-react';
+import { AddIcon as Plus, LocationIcon as MapPin } from '../components/icons/AppIcons';
 import AddressCard from '../components/Checkout/Step2/AddressCard';
 import AddressForm from '../components/Checkout/Step2/AddressForm';
 import SuccessModal from '../components/Checkout/Step2/SuccessModal';

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { BackIcon, ShareIcon } from '../icons/AppIcons';
 import FavoriteButton from '../FavoriteButton';
 import StockNotice from '../AdminInventory/StockNotice';
 import { canAddToCart, getMaxQuantity } from '../AdminInventory/inventory';
@@ -33,7 +33,7 @@ const ProductHero = ({ product, onAddToCart, onBack }) => {
   return (
     <section className="grid gap-8 lg:grid-cols-[1.08fr_.92fr]">
       <div className="relative rounded-[32px] border border-slate-100 bg-white p-4 shadow-[0_15px_45px_rgba(15,23,42,0.04)] md:p-6">
-        <button type="button" onClick={onBack} title="Volver al catálogo" aria-label="Volver al catálogo" className="absolute left-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 md:-left-14 md:top-3"><ArrowLeft size={17} /></button>
+        <button type="button" onClick={onBack} title="Volver al catálogo" aria-label="Volver al catálogo" className="absolute left-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 md:-left-14 md:top-3"><BackIcon size={17} /></button>
         <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[24px] bg-slate-50">
           {images[activeImage] ? (
             <img
@@ -45,7 +45,7 @@ const ProductHero = ({ product, onAddToCart, onBack }) => {
           <div className="absolute left-5 top-5 rounded-2xl bg-white/90 px-4 py-2 text-sm font-black text-slate-800 shadow-sm">{product.brand}</div>
           <div className="absolute right-5 top-5 flex gap-2">
             <FavoriteButton productId={product.id} />
-            <button type="button" onClick={() => navigator.clipboard?.writeText(window.location.href)} className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-lg text-slate-500 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:text-emerald-500" aria-label="Compartir producto">↗</button>
+            <button type="button" onClick={() => navigator.clipboard?.writeText(window.location.href)} className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:text-emerald-500" aria-label="Compartir producto"><ShareIcon size={17} /></button>
           </div>
         </div>
         <div className="mt-4 flex gap-3 overflow-x-auto">

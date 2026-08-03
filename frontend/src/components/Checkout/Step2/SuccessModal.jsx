@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+import { SuccessIcon } from '../../icons/AppIcons';
 const SuccessModal = ({ isOpen, onContinue, onCancel, title = 'Dirección creada', message = 'La dirección de envío se ha creado exitosamente', variant = 'success', confirmText = 'Continuar', cancelText = 'Cancelar', error = '', isLoading = false }) => {
   if (!isOpen) return null;
 
@@ -8,9 +8,7 @@ const SuccessModal = ({ isOpen, onContinue, onCancel, title = 'Dirección creada
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="address-created-title">
       <div className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-2xl">
         <div className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${isDanger ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-[#10B981]'}`}>
-          <svg className="h-12 w-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-            {isDanger ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12m-10 0v11h8V7m-6-3h4l1 3H8l1-3Z" /> : <path strokeLinecap="round" strokeLinejoin="round" d="m5 12 4 4L19 6" />}
-          </svg>
+          <SuccessIcon className="h-12 w-12" danger={isDanger} aria-hidden="true" />
         </div>
         <h3 id="address-created-title" className="mt-6 text-2xl font-black text-slate-900">{title}</h3>
         <p className="mt-2 text-sm font-medium text-slate-500">{message}</p>

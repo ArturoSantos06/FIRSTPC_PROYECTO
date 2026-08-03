@@ -9,7 +9,9 @@ import { AuthContext } from "../../context/AuthContext";
 import ProductCatalogHeader from "./CatalogHeader";
 import ProductCatalogSidebar from "./SideBar/ProductCatalogSidebar";
 import ProductCatalogEmptyState from "./EmptyState";
+import { subscribeToCategories } from '../../services/categoryService';
 import DeleteProductModal from "./DeleteProductModal";
+import Spinner from "../Spinner";
 import {
   CATEGORIES,
   TRENDING_BRANDS,
@@ -53,6 +55,8 @@ const ProductCatalog = () => {
   const { user } = useContext(AuthContext);
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [catalogCategories, setCatalogCategories] = useState(CATEGORIES);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get("categoria")?.split(",").filter(Boolean) || []);
   const [selectedBrands, setSelectedBrands] = useState([]);
@@ -72,6 +76,18 @@ const ProductCatalog = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
+    const unsubscribe = subscribeToCategories((items) => {
+      if (!items.length) return;
+      setCatalogCategories(items.map((category) => ({
+        id: category.slug,
+        label: category.name,
+        icon: category.slug === 'teclados' ? 'KEYBOARD' : category.slug === 'mouses' ? 'MOUSE' : category.imageKey === 'cpu' ? 'CPU' : category.imageKey === 'gpu' ? 'GPU' : category.imageKey === 'motherboard' ? 'MB' : category.imageKey === 'case' ? 'CASE' : category.imageKey === 'cooling' ? 'COOL' : category.imageKey === 'ram' ? 'RAM' : category.imageKey === 'ssd' ? 'SSD' : category.imageKey === 'psu' ? 'PSU' : category.imageKey === 'monitor' ? 'MON' : category.imageKey === 'computadora' ? 'PC' : category.imageKey === 'peripherals' ? 'IO' : 'AUX',
+      })));
+    }, (error) => console.error('Error cargando categorías del catálogo:', error));
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
     const fetchProducts = async () => {
       try {
         const productsRef = collection(db, "products");
@@ -83,6 +99,8 @@ const ProductCatalog = () => {
         setProducts(productsData);
       } catch (error) {
         console.error("Error cargando componentes:", error);
+      } finally {
+        setIsLoadingProducts(false);
       }
     };
     fetchProducts();
@@ -247,7 +265,7 @@ const ProductCatalog = () => {
 
         <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
           <ProductCatalogSidebar
-            categories={CATEGORIES}
+            categories={catalogCategories}
             availableBrands={availableBrands}
             search={search}
             onSearchChange={setSearch}
@@ -280,7 +298,9 @@ const ProductCatalog = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {filteredProducts.length > 0 ? (
+              {isLoadingProducts ? (
+                <Spinner label="Cargando componentes..." />
+              ) : filteredProducts.length > 0 ? (
                 filteredProducts.map((product) => (
                   <ProductCard
                     key={product.id}

@@ -19,8 +19,10 @@ import PCBuilder from './components/PCBuilder/PCBuilder';
 import RecommendationWizard from './components/RecommendationWizard/RecommendationWizard';
 import AdminInventory from './pages/AdminInventory';
 import AdminOrderHistory from './pages/AdminOrderHistory';
+import AdminCategories from './pages/AdminCategories';
 import Support from './pages/Support';
 import Footer from './components/Home/Footer';
+import Spinner from './components/Spinner';
 import { AboutPage, FAQPage, HowToBuyPage, PCBuilderGuidePage, PaymentShippingPage, RecommendationGuidePage, WarrantyPage } from './pages/InformationPages';
 
 
@@ -28,11 +30,7 @@ function App() {
   const { user, loading } = useContext(AuthContext);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center font-['Montserrat'] bg-[#F8FAFC]">
-        <div className="text-slate-500 font-bold animate-pulse">Cargando FIRSTPC...</div>
-      </div>
-    );
+    return <Spinner label="Cargando FIRSTPC..." fullScreen />;
   }
 
   return (
@@ -252,6 +250,7 @@ function App() {
           />
           <Route path="/admin/recomendador-settings" element={<RecommendationWizard />} />
           <Route path="/admin/inventario" element={<AdminInventory />} />
+          <Route path="/admin/categorias" element={<AdminCategories />} />
           <Route path="/admin/compras" element={<AdminOrderHistory />} />
         </Route>
 
