@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { signInWithPopup } from 'firebase/auth';
+import { Link } from 'react-router-dom';
 import { auth, googleProvider } from '../firebaseConfig';
 import logoStore from '../assets/logof.png';
 import googleIcon from '../assets/google-icon.svg';
@@ -32,7 +33,7 @@ const LoginModal = ({ isOpen, onClose }) => {
       <div className="mb-8 space-y-3 text-center"><span className="block text-xs font-bold uppercase tracking-[0.25em] text-[#10B981]">FIRSTPC STORE</span><h2 id="login-modal-title" className="text-3xl font-black leading-tight tracking-tight text-slate-800">Tu Cuenta Comienza Aquí</h2><p className="mx-auto max-w-[300px] text-sm font-medium text-[#64748B]">Accede a tu hardware ideal a un clic de distancia de forma rápida y segura.</p></div>
       <button type="button" onClick={handleGoogleSignIn} disabled={loading} className="group flex w-full items-center justify-center rounded-full bg-[#10B981] px-6 py-4 text-base font-bold text-white shadow-[0_4px_14px_rgba(16,185,129,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#0ea472] disabled:cursor-wait disabled:opacity-60"><span className="mr-4 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-300 group-hover:scale-105"><img src={googleIcon} alt="Google" className="h-5 w-5 object-contain" /></span><span className="tracking-wide">{loading ? 'Iniciando sesión...' : 'Continuar con Google'}</span></button>
       {error && <p role="alert" className="mt-4 text-center text-xs font-bold text-rose-500">{error}</p>}
-      <div className="mt-8 w-full border-t border-slate-100 pt-6 text-center"><p className="text-xs font-medium text-[#64748B]">Al acceder, aceptas nuestros <span className="font-bold text-[#10B981]">Términos de servicio</span></p></div>
+      <div className="mt-8 w-full border-t border-slate-100 pt-6 text-center"><p className="text-xs font-medium text-[#64748B]">Al acceder, aceptas nuestros <Link to="/terminos" onClick={onClose} className="font-bold text-[#10B981] hover:underline">Términos y condiciones</Link></p></div>
     </div>
   </div>;
 };

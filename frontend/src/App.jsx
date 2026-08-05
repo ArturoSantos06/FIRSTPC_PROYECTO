@@ -23,7 +23,7 @@ import AdminCategories from './pages/AdminCategories';
 import Support from './pages/Support';
 import Footer from './components/Home/Footer';
 import Spinner from './components/Spinner';
-import { AboutPage, FAQPage, HowToBuyPage, PCBuilderGuidePage, PaymentShippingPage, RecommendationGuidePage, WarrantyPage } from './pages/InformationPages';
+import { AboutPage, FAQPage, HowToBuyPage, PCBuilderGuidePage, PaymentShippingPage, PrivacyPage, RecommendationGuidePage, TermsPage, WarrantyPage } from './pages/InformationPages';
 
 
 function App() {
@@ -65,6 +65,8 @@ function App() {
         <Route path="/guia-recomendador" element={<RecommendationGuidePage />} />
         <Route path="/garantias" element={<WarrantyPage />} />
         <Route path="/garantias-rma" element={<WarrantyPage />} />
+        <Route path="/terminos" element={<TermsPage />} />
+        <Route path="/privacidad" element={<PrivacyPage />} />
 
         <Route
           path="/soporte"

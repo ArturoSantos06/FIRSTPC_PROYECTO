@@ -42,7 +42,7 @@ export default function PCBuilder() {
   const { addItem } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
-  const { selectedComponents, currentStep, totalPrice, selectComponent, removeComponent, nextStep, prevStep, skipStep, loadConfiguration, goToStep } = usePCBuilder();
+  const { selectedComponents, currentStep, totalPrice, selectComponent, removeComponent, nextStep, prevStep, skipStep, loadConfiguration, clearConfiguration, goToStep } = usePCBuilder();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -193,10 +193,16 @@ export default function PCBuilder() {
   };
 
   const startNewBuild = () => {
-    loadConfiguration({}, 1);
+    clearConfiguration();
     setAssemblySelected(null);
     setFeedback("");
     setShowSaveModal(false);
+  };
+
+  const clearBuild = () => {
+    clearConfiguration();
+    setAssemblySelected(null);
+    setFeedback("");
   };
 
   const renderSummaryRows = (interactive = false) => (
@@ -208,7 +214,7 @@ export default function PCBuilder() {
         return <div key={key} role={interactive ? "button" : undefined} tabIndex={interactive ? 0 : undefined} onClick={goToComponent} onKeyDown={(event) => { if (interactive && (event.key === "Enter" || event.key === " ")) goToComponent(); }} className={`flex items-center gap-3 rounded-xl border border-slate-100 p-3 ${interactive ? "cursor-pointer transition hover:border-emerald-300 hover:bg-emerald-50/40" : ""}`}><img src={productImage(product)} alt="" className="h-12 w-12 rounded-lg bg-slate-50 object-contain" /><div className="min-w-0 flex-1"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{item?.label || key}</p><p className="truncate text-xs font-bold">{product.name}</p></div><p className="text-xs font-black text-emerald-600">{formatPrice(product.price)}</p><button type="button" onClick={(event) => { event.stopPropagation(); removeComponent(key); }} aria-label={`Eliminar ${item?.label || key}`} className="text-slate-400 hover:text-red-500"><Trash2 size={16} /></button></div>;
       })}
       <div className="flex items-center justify-between rounded-xl border border-slate-100 p-3 text-sm"><span className="font-bold">Ensamblado</span><span className={`font-black ${assemblySelected === false ? "text-slate-500" : ""}`}>{assemblySelected === true ? `Sí, ${formatPrice(ASSEMBLY_COST)}` : assemblySelected === false ? "No, sin ensamblado" : "No seleccionado"}</span></div>
-      {interactive && selectedEntries.length > 0 && <div className="space-y-2"><button type="button" onClick={() => goToStep(12)} className="w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-600">Ir al resumen</button><button type="button" onClick={() => selectedEntries.forEach(([key]) => removeComponent(key))} className="w-full rounded-xl border border-rose-200 px-4 py-2.5 text-xs font-black text-rose-600 transition hover:bg-rose-50">Vaciar selección</button></div>}
+      {interactive && selectedEntries.length > 0 && <div className="space-y-2"><button type="button" onClick={() => goToStep(12)} className="w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-600">Ir al resumen</button><button type="button" onClick={clearBuild} className="w-full rounded-xl border border-rose-200 px-4 py-2.5 text-xs font-black text-rose-600 transition hover:bg-rose-50">Vaciar selección</button></div>}
     </div>
   );
 
@@ -220,7 +226,7 @@ export default function PCBuilder() {
           <div className="mb-8 flex gap-1">{STEPS.map((item, index) => <div key={item.key} className={`h-2 flex-1 rounded-full ${index < currentStep ? "bg-emerald-500" : "bg-slate-100"}`} />)}</div>
 
           {step.summary ? (
-            <div><h2 className="mb-2 text-2xl font-black">Resumen de tu configuración</h2><p className="mb-6 text-sm font-medium text-slate-500">Revisa tu selección antes de continuar.</p>{renderSummaryRows()}<div className="mt-6 flex items-center justify-between rounded-2xl bg-slate-900 px-5 py-4 text-white"><span className="text-xs font-bold uppercase tracking-[.2em] text-slate-400">Total de tu configuración</span><span className="text-2xl font-black text-emerald-400">{formatPrice(buildTotal)}</span></div><div className="mt-6 grid gap-3 sm:grid-cols-3"><button type="button" onClick={() => goToStep(1)} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 py-3 text-sm font-black text-slate-700 transition hover:border-emerald-400 hover:text-emerald-600">Modificar componentes</button><button type="button" onClick={addToCart} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-600"><ShoppingCart size={18} /> Agregar al carrito</button><button type="button" onClick={saveConfiguration} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 py-3 text-sm font-black text-slate-700 transition hover:border-emerald-400 hover:text-emerald-600"><Save size={18} /> Guardar en mi perfil</button></div>{feedback && <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-center text-sm font-bold text-emerald-700">{feedback}</p>}</div>
+            <div><h2 className="mb-2 text-2xl font-black">Resumen de tu configuración</h2><p className="mb-6 text-sm font-medium text-slate-500">Revisa tu selección antes de continuar.</p>{renderSummaryRows()}<div className="mt-6 flex items-center justify-between rounded-2xl bg-slate-900 px-5 py-4 text-white"><span className="text-xs font-bold uppercase tracking-[.2em] text-slate-400">Total de tu configuración</span><span className="text-2xl font-black text-emerald-400">{formatPrice(buildTotal)}</span></div><div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><button type="button" onClick={() => goToStep(1)} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:border-emerald-400 hover:text-emerald-600">Modificar componentes</button><button type="button" onClick={addToCart} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:border-emerald-400 hover:text-emerald-600"><ShoppingCart size={18} /> Agregar al carrito</button><button type="button" onClick={saveConfiguration} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:border-emerald-400 hover:text-emerald-600"><Save size={18} /> Guardar en mi perfil</button><button type="button" onClick={clearBuild} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:border-emerald-400 hover:text-emerald-600"><Trash2 size={18} /> Vaciar PC</button></div>{feedback && <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-center text-sm font-bold text-emerald-700">{feedback}</p>}</div>
           ) : step.assembly ? (
             <div><h2 className="mb-2 text-xl font-extrabold">¿Quieres que ensamblemos tu PC?</h2><p className="mb-6 text-sm font-medium text-slate-500">El servicio de ensamblado tiene un costo adicional de {formatPrice(ASSEMBLY_COST)}.</p><div className="grid gap-4 sm:grid-cols-2"><button type="button" onClick={() => setAssemblySelected(true)} className={`rounded-2xl border p-6 text-left transition ${assemblySelected === true ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-100" : "border-slate-200 hover:border-emerald-300"}`}><Check className="mb-3 text-emerald-600" /><p className="font-black">Sí, ensamblar mi PC</p><p className="mt-1 text-sm text-slate-500">+{formatPrice(ASSEMBLY_COST)}</p></button><button type="button" onClick={() => setAssemblySelected(false)} className={`rounded-2xl border p-6 text-left transition ${assemblySelected === false ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-100" : "border-slate-200 hover:border-emerald-300"}`}><Check className="mb-3 text-slate-500" /><p className="font-black">No, lo armo por mi cuenta</p><p className="mt-1 text-sm text-slate-500">Sin costo adicional</p></button></div></div>
           ) : (

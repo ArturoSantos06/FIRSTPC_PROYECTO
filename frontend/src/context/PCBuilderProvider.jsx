@@ -73,6 +73,10 @@ export function PCBuilderProvider({ children }) {
     setSelectedComponents({ ...INITIAL_COMPONENTS, ...components });
     setCurrentStep(step);
   }, []);
+  const clearConfiguration = useCallback(() => {
+    setSelectedComponents({ ...INITIAL_COMPONENTS });
+    setCurrentStep(1);
+  }, []);
   const goToStep = useCallback((step) => {
     setCurrentStep((current) => {
       const targetStep = Math.min(Math.max(step, 1), 12);
@@ -87,8 +91,8 @@ export function PCBuilderProvider({ children }) {
   );
 
   const value = useMemo(
-    () => ({ selectedComponents, currentStep, totalPrice, selectComponent, removeComponent, nextStep, prevStep, skipStep, loadConfiguration, goToStep }),
-    [selectedComponents, currentStep, totalPrice, loadConfiguration, goToStep]
+    () => ({ selectedComponents, currentStep, totalPrice, selectComponent, removeComponent, nextStep, prevStep, skipStep, loadConfiguration, clearConfiguration, goToStep }),
+    [selectedComponents, currentStep, totalPrice, loadConfiguration, clearConfiguration, goToStep]
   );
 
   return <PCBuilderContext.Provider value={value}>{children}</PCBuilderContext.Provider>;

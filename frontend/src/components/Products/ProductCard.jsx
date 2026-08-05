@@ -2,12 +2,15 @@ import React from "react";
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import FavoriteButton from '../FavoriteButton';
-import { canAddToCart } from '../AdminInventory/inventory';
+import { canAddToCart, getLocalStock } from '../AdminInventory/inventory';
 import { EditIcon } from '../icons/AppIcons';
 
 const ProductCard = ({ product, isAdmin, onEditProduct }) => {
   const { addItem } = useCart();
   const navigate = useNavigate();
+  const stock = getLocalStock(product);
+  const rating = Math.max(0, Math.min(5, Number(product.rating) || 0));
+  const filledStars = Math.round(rating);
 
   const openProductDetail = () => {
     if (product?.id) navigate(`/producto/${product.id}`);
@@ -55,9 +58,12 @@ const ProductCard = ({ product, isAdmin, onEditProduct }) => {
         <p className="text-xs font-medium text-slate-400 capitalize mb-4">
           {product.category}
         </p>
-        <div className="mb-2 flex items-center gap-2" aria-label={`Calificación: ${Number(product.rating || 0).toFixed(1)} de 5 estrellas`}>
-          <span className="text-sm tracking-widest text-amber-400">★★★★★</span>
-          <span className="text-xs font-black text-slate-600">{Number(product.rating || 0).toFixed(1)}</span>
+        <p className={`mb-2 text-[10px] font-black ${stock > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+          {stock > 0 ? `${stock} en stock` : 'Agotado'}
+        </p>
+        <div className="mb-2 flex items-center gap-2" aria-label={`Calificación: ${rating.toFixed(1)} de 5 estrellas`}>
+          <span className="flex text-sm tracking-widest" aria-hidden="true">{[1, 2, 3, 4, 5].map((star) => <span key={star} className={star <= filledStars ? 'text-amber-400' : 'text-slate-200'}>{star <= filledStars ? '★' : '☆'}</span>)}</span>
+          <span className="text-xs font-black text-slate-600">{rating.toFixed(1)}</span>
           <span className="text-[10px] font-semibold text-slate-400">({product.reviewsCount || 0})</span>
         </div>
       </div>

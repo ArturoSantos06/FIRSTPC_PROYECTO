@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { BackIcon, ShareIcon } from '../icons/AppIcons';
 import FavoriteButton from '../FavoriteButton';
 import StockNotice from '../AdminInventory/StockNotice';
-import { canAddToCart, getMaxQuantity } from '../AdminInventory/inventory';
+import { canAddToCart, getLocalStock, getMaxQuantity } from '../AdminInventory/inventory';
 
 const formatPrice = (value) => new Intl.NumberFormat('es-MX', {
   style: 'currency',
@@ -17,6 +17,7 @@ const ProductHero = ({ product, onAddToCart, onBack }) => {
   const [quantity, setQuantity] = useState(1);
   const displayRating = Number(product.rating) || 0;
   const displayReviewsCount = Number(product.reviewsCount) || 0;
+  const stock = getLocalStock(product);
 
   useEffect(() => {
     setActiveImage(0);
@@ -66,6 +67,9 @@ const ProductHero = ({ product, onAddToCart, onBack }) => {
         <div className="rounded-[24px] bg-slate-50 p-6">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Precio FIRSTPC</p>
           <p className="mt-1 text-3xl font-black tracking-tight text-slate-900">{formatPrice(product.price)}</p>
+          <p className={`mt-3 text-sm font-black ${stock > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+            {stock > 0 ? `${stock} pieza${stock === 1 ? '' : 's'} disponibles en stock` : 'Agotado'}
+          </p>
           <div className="mt-4 space-y-2 text-sm font-semibold text-slate-600"><p><span className="mr-2 text-emerald-500">✓</span>Envío a todo México</p><p><span className="mr-2 text-emerald-500">✓</span>Recíbelo entre 3 a 10 días hábiles</p><p><span className="mr-2 text-emerald-500">✓</span>Paga con OXXO Pay, tarjeta de débito, crédito o PayPal</p></div>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
