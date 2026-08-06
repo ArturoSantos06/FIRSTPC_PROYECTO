@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { signInWithPopup } from 'firebase/auth';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { auth, googleProvider } from '../firebaseConfig';
 import logoStore from '../assets/logof.png';
 import googleIcon from '../assets/google-icon.svg';
 
-const LoginModal = ({ isOpen, onClose }) => {
+const LoginModal = ({ isOpen, onClose, redirectTo }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -17,7 +19,9 @@ const LoginModal = ({ isOpen, onClose }) => {
     setError('');
     try {
       await signInWithPopup(auth, googleProvider);
-      onClose();
+      const destination = redirectTo || (location.pathname === '/login' ? location.state?.from : null);
+      if (destination) navigate(destination, { replace: true });
+      else onClose();
     } catch (signInError) {
       console.error('Error iniciando sesión:', signInError);
       setError('No pudimos iniciar sesión. Intenta nuevamente.');
@@ -26,7 +30,7 @@ const LoginModal = ({ isOpen, onClose }) => {
     }
   };
 
-  return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/20 p-4 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+  return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/20 p-4 font-['Montserrat'] backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
     <div role="dialog" aria-modal="true" aria-labelledby="login-modal-title" className="relative w-full max-w-[440px] rounded-[32px] border border-white/80 bg-white p-8 shadow-[0_25px_80px_rgba(15,23,42,0.2)] md:p-10">
       <button type="button" onClick={onClose} aria-label="Regresar" className="mb-5 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600"><ArrowLeft size={18} /></button>
       <div className="mb-6 flex justify-center"><div className="rounded-full bg-[#A7F3D0]/20 p-4"><img src={logoStore} alt="FIRSTPC Logo" className="h-20 w-20 object-contain" /></div></div>

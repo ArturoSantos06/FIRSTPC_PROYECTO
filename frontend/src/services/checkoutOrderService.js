@@ -2,6 +2,7 @@ import { collection, doc, getDoc, runTransaction, serverTimestamp, Timestamp } f
 import { enviarOrdenDropshipping } from './dropshipService';
 import { getFulfillment, isDistributorIntegrated } from '../components/AdminInventory/inventory';
 import { db } from '../firebaseConfig';
+import { createDemoShipment } from './estafetaDemoService';
 
 const getPurchasableItems = (cartItems) => cartItems.filter((item) => !item.id?.startsWith('firstpc-assembly-service'));
 
@@ -76,13 +77,21 @@ export const createCheckoutOrder = async ({
     distributorOrderId = distributorResponse.distributorOrderId || distributorResponse.orderId || null;
   }
 
+  const orderNumber = `FPC-${createdAt.getTime().toString(36).toUpperCase()}-${Math.floor(Math.random() * 900 + 100)}`;
+  const oxxoReference = selectedPaymentMethod === 'oxxo'
+    ? `OXXO-${String(createdAt.getTime()).slice(-10)}`
+    : null;
+  const demoShipment = ['estafeta', 'dhl'].includes(shipping?.id)
+    ? await createDemoShipment({ carrierId: shipping.id, orderNumber, address, shippingCost })
+    : null;
+
   const orderData = {
     userId,
     customer: {
       name: customerName || `${address?.firstName || ''} ${address?.lastName || ''}`.trim() || 'Cliente registrado',
       email: customerEmail || '',
     },
-    orderNumber: `FPC-${createdAt.getTime().toString(36).toUpperCase()}-${Math.floor(Math.random() * 900 + 100)}`,
+    orderNumber,
     products: cartItems.map(({ id, name, title, images, image, price, quantity }) => ({
       id,
       name: name || title || 'Producto',
@@ -93,9 +102,10 @@ export const createCheckoutOrder = async ({
       localQuantity: fulfillmentByProduct.get(id)?.localQuantity || 0,
       distributorQuantity: fulfillmentByProduct.get(id)?.distributorQuantity || 0,
     })),
-    shipping: { carrier: shipping.name, id: shipping.id, cost: shippingCost, address },
+    shipping: { carrier: shipping.name, id: shipping.id, cost: shippingCost, address, shipment: demoShipment },
     billing: billing || { note: 'Factura de público general con RFC genérico' },
     paymentMethod: selectedPaymentMethod,
+    oxxoReference,
     subtotal: totalAmount,
     discountAmount,
     couponCode: coupon?.code || null,

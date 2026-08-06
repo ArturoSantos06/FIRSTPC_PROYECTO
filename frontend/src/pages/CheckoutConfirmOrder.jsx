@@ -27,7 +27,10 @@ const CheckoutConfirmOrder = () => {
   const selectedShipping = state?.selectedShipping || 'estafeta';
   const selectedPaymentMethod = state?.selectedPaymentMethod || 'card';
   const coupon = state?.coupon || null;
-  const shipping = shippingOptions.find((option) => option.id === selectedShipping) || shippingOptions[0];
+  const baseShipping = shippingOptions.find((option) => option.id === selectedShipping) || shippingOptions[0];
+  const shipping = state?.shippingQuote
+    ? { ...baseShipping, price: state.shippingQuote.price, startDays: state.shippingQuote.estimatedDays.min, endDays: state.shippingQuote.estimatedDays.max }
+    : baseShipping;
   const shippingCost = cartItems.length ? shipping.price : 0;
   const discountAmount = coupon ? totalAmount * (Number(coupon.discountRate) || 0.10) : 0;
   const ivaAmount = (totalAmount - discountAmount) * (IVA_RATE / (1 + IVA_RATE));
@@ -116,7 +119,7 @@ const CheckoutConfirmOrder = () => {
           discountAmount={discountAmount}
           ivaAmount={ivaAmount}
           showShipping
-          buttonText={isProcessing ? 'Procesando con distribuidor...' : 'Confirmar y Pagar'}
+          buttonText={isProcessing ? 'Confirmando pedido...' : 'Confirmar y Pagar'}
           onProceed={handleConfirm}
           isReadyToProceed={!isLoading && Boolean(address) && cartItems.length > 0 && !isProcessing}
         />

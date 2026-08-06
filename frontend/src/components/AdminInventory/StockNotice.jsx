@@ -1,9 +1,13 @@
-import { getLocalStock } from './inventory';
+import { getLocalStock, isDistributorIntegrated } from './inventory';
 
 const StockNotice = ({ product, quantity = 1, compact = false }) => {
   const stockLocal = getLocalStock(product);
   const selectedQuantity = Math.max(1, Number(quantity) || 1);
   const textSize = compact ? 'text-[11px]' : 'text-xs';
+
+  if (stockLocal === 0 && !isDistributorIntegrated(product)) {
+    return null;
+  }
 
   if (stockLocal === 0) {
     return <p className={`${textSize} rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 font-semibold text-amber-900`}>🟡 Disponible sobre pedido (Envío estimado: 3 a 10 días hábiles)</p>;

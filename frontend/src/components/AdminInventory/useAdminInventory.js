@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { AlertTriangle, Check } from "lucide-react";
 import { db } from "../../firebaseConfig";
+import { DEFAULT_CATEGORIES, subscribeToCategories } from "../../services/categoryService";
 
 const PRODUCT_COLLECTION = "products";
-export const CATEGORIES = [["", "Todas las categorías"], ["procesadores", "Procesadores"], ["tarjetas-madre", "Tarjetas madre"], ["memorias-ram", "Memorias RAM"], ["tarjetas-de-video", "Tarjetas de video / Gráficas"], ["enfriamiento", "Enfriamiento"], ["almacenamiento", "Almacenamiento"], ["gabinetes", "Gabinetes"], ["fuentes-de-poder", "Fuentes de poder"], ["monitores", "Monitores"], ["computadora", "Computadoras"], ["teclados", "Teclados"], ["mouses", "Mouses"], ["audio", "Audio"], ["audifonos-gaming", "Audífonos gaming"]];
+const DEFAULT_INVENTORY_CATEGORIES = DEFAULT_CATEGORIES.map(({ slug, name }) => [slug, name]);
 const normalize = (value) => String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
 const categoryMatches = (productCategory, selectedCategory) => !selectedCategory || normalize(productCategory) === normalize(selectedCategory);
 export const getStock = (product) => Math.max(0, Number(product.stock) || 0);
@@ -21,6 +22,11 @@ const useAdminInventory = () => {
   const [error, setError] = useState("");
   const [modalProduct, setModalProduct] = useState(null);
   const [savingId, setSavingId] = useState(null);
+  const [categories, setCategories] = useState(DEFAULT_INVENTORY_CATEGORIES);
+
+  useEffect(() => subscribeToCategories((items) => {
+    if (items.length) setCategories(items.map(({ slug, name }) => [slug, name]));
+  }, (snapshotError) => console.error("Error cargando categorías del inventario:", snapshotError)), []);
 
   useEffect(() => onSnapshot(collection(db, PRODUCT_COLLECTION), (snapshot) => {
     setProducts(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })));
@@ -44,7 +50,7 @@ const useAdminInventory = () => {
     finally { setSavingId(null); }
   };
 
-  return { products, search, setSearch, category, setCategory, criticalOnly, setCriticalOnly, loading, error, filteredProducts, counts, modalProduct, setModalProduct, savingId, saveProduct, CATEGORIES, getImage, getStock, money, stockState };
+  return { products, search, setSearch, category, setCategory, criticalOnly, setCriticalOnly, loading, error, filteredProducts, counts, modalProduct, setModalProduct, savingId, saveProduct, CATEGORIES: [["", "Todas las categorías"], ...categories], getImage, getStock, money, stockState };
 };
 
 export default useAdminInventory;

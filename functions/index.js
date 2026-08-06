@@ -11,6 +11,55 @@ const db = getFirestore();
 const BRAND_EMAIL = 'contacto.firstpc@gmail.com';
 const gmailAppPassword = defineSecret('GMAIL_APP_PASSWORD');
 
+const getDemoShipmentSteps = (carrierId) => [
+  { status: 'preparacion', labelStatus: 'En preparación' },
+  { status: 'recolectado', labelStatus: `Recolectado por ${carrierId === 'dhl' ? 'DHL' : 'Estafeta'}` },
+  { status: 'transito', labelStatus: 'En tránsito' },
+  { status: 'ruta_entrega', labelStatus: 'En ruta de entrega' },
+  { status: 'entregado', labelStatus: 'Entregado' },
+];
+
+const getDate = (value) => value?.toDate ? value.toDate() : value ? new Date(value) : null;
+
+// Sincroniza el progreso de las guías demo con el estado de cada orden.
+exports.syncDemoShipmentStatuses = onSchedule(
+  { schedule: 'every 15 minutes', timeZone: 'America/Mexico_City', region: 'us-central1' },
+  async () => {
+    const snapshot = await db.collection('orders')
+      .where('shipping.shipment.isDemo', '==', true)
+      .limit(500)
+      .get();
+
+    const now = Date.now();
+    let updated = 0;
+    for (const orderSnapshot of snapshot.docs) {
+      const order = orderSnapshot.data();
+      const shipment = order.shipping?.shipment;
+      if (order.paymentMethod === 'oxxo' && order.status === 'Pendiente de pago') continue;
+      const demoShipmentSteps = getDemoShipmentSteps(shipment.carrierId);
+      const createdAt = getDate(shipment?.demoStartedAt) || getDate(order.createdAt);
+      if (!createdAt) continue;
+
+      const elapsedDays = Math.max(0, Math.floor((now - createdAt.getTime()) / 86_400_000));
+      const step = demoShipmentSteps[Math.min(demoShipmentSteps.length - 1, elapsedDays)];
+      const nextData = {
+        'shipping.shipment.status': step.status,
+        'shipping.shipment.labelStatus': step.labelStatus,
+        'shipping.shipment.updatedAt': FieldValue.serverTimestamp(),
+      };
+      if (step.status === 'entregado' && order.status !== 'Entregado') {
+        nextData.status = 'Entregado';
+        nextData.receivedAt = FieldValue.serverTimestamp();
+      }
+
+      await orderSnapshot.ref.update(nextData);
+      updated += 1;
+    }
+
+    console.log(`Guías demo sincronizadas: ${updated}`);
+  },
+);
+
 exports.sendSupportEmail = onCall(
   { secrets: [gmailAppPassword], region: 'us-central1' },
   async (request) => {

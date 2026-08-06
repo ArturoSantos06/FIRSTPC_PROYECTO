@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { collection, onSnapshot, updateDoc, doc } from 'firebase/firestore';
-import { Calendar } from 'lucide-react';
 import { openReceiptPdf } from '../components/Checkout/Step4/ReceiptPdf';
+import MonthYearPicker from '../components/MonthYearPicker';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Home/Footer';
 import { WarningIcon } from '../components/icons/AppIcons';
@@ -62,7 +62,6 @@ const AdminOrderHistory = () => {
   const [savingId, setSavingId] = useState('');
   const [now, setNow] = useState(Date.now());
   const [selectedDistributorItems, setSelectedDistributorItems] = useState(null);
-  const dateInputRef = useRef(null);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'orders'), (snapshot) => {
@@ -101,10 +100,25 @@ const AdminOrderHistory = () => {
     setSavingId(order.id);
     setError('');
     try {
+      const shipmentUpdates = order.shipping?.shipment?.isDemo && status === 'Procesado'
+        ? {
+          'shipping.shipment.status': 'preparacion',
+          'shipping.shipment.labelStatus': 'En preparación',
+          'shipping.shipment.demoStartedAt': new Date().toISOString(),
+          'shipping.shipment.updatedAt': new Date(),
+        }
+        : order.shipping?.shipment?.isDemo && status === 'Entregado'
+        ? {
+          'shipping.shipment.status': 'entregado',
+          'shipping.shipment.labelStatus': 'Entregado',
+          'shipping.shipment.updatedAt': new Date(),
+        }
+        : {};
       await updateDoc(doc(db, 'orders', order.id), {
         status,
         ...(status === 'Entregado' ? { receivedAt: order.receivedAt || new Date() } : {}),
         ...(status !== 'Pendiente de pago' ? { isReserved: false, reservationExpiresAt: null } : {}),
+        ...shipmentUpdates,
       });
     } catch (saveError) {
       console.error('Error actualizando estado de compra:', saveError);
@@ -154,7 +168,7 @@ const AdminOrderHistory = () => {
         <section className="mb-6 flex flex-col gap-3 rounded-[28px] border border-slate-200/70 bg-white p-4 shadow-sm lg:flex-row">
           <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por folio, RMA, ticket, nombre o correo..." className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-emerald-400 focus:bg-white" />
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-emerald-400 lg:w-64"><option value="all">Todos los estados</option><optgroup label="Estado de compra">{STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}</optgroup><optgroup label="Estado de garantía">{RMA_STATUS_OPTIONS.map(([value, label]) => <option key={value} value={`rma:${value}`}>Garantía: {label}</option>)}</optgroup></select>
-          <button type="button" title="Filtrar por mes y año" aria-label="Filtrar por mes y año" onClick={() => { const input = dateInputRef.current; if (!input) return; if (typeof input.showPicker === 'function') input.showPicker(); else input.click(); }} className="relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-500 transition hover:border-emerald-400 hover:bg-white hover:text-emerald-600 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"><Calendar size={19} aria-hidden="true" /><input ref={dateInputRef} type="month" value={monthFilter && yearFilter ? `${yearFilter}-${monthFilter.padStart(2, '0')}` : ''} onChange={(event) => { const [year, month] = event.target.value.split('-'); setYearFilter(year || ''); setMonthFilter(month ? String(Number(month)) : ''); }} aria-label="Filtrar por mes y año" tabIndex={-1} className="pointer-events-none absolute h-0 w-0 opacity-0" /></button>
+          <MonthYearPicker value={monthFilter && yearFilter ? `${yearFilter}-${monthFilter.padStart(2, '0')}` : ''} onChange={(value) => { const [year, month] = value.split('-'); setYearFilter(year || ''); setMonthFilter(month ? String(Number(month)) : ''); }} ariaLabel="Filtrar por mes y año" />
         </section>
 
         {error && <p role="alert" className="mb-5 rounded-2xl bg-rose-50 p-4 text-sm font-bold text-rose-700">{error}</p>}

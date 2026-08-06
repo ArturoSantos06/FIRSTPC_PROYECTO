@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import CheckoutLayout from '../components/Checkout/common/CheckoutLayout';
 import OrderSummary from '../components/Checkout/common/OrderSummary';
 import PaymentOptions from '../components/Checkout/Step3/PaymentOptions';
 import ShippingOptions, { shippingOptions } from '../components/Checkout/Step3/ShippingOptions';
 import { useCart } from '../context/CartContext';
-import { auth } from '../firebaseConfig';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { auth, db } from '../firebaseConfig';
 import { getCouponForUser } from '../services/couponService';
+import { getShippingDemoQuote } from '../services/estafetaDemoService';
 
 const CouponFeedbackModal = ({ message, onClose }) => (
   <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4 font-['Montserrat'] backdrop-blur-sm">
@@ -58,10 +60,34 @@ const CheckoutShippingPayment = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card');
   const [currentStep, setCurrentStep] = useState(3);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [shippingQuotes, setShippingQuotes] = useState({});
+  const [isLoadingShippingQuotes, setIsLoadingShippingQuotes] = useState(true);
+
+  useEffect(() => {
+    const loadShippingQuotes = async () => {
+      setIsLoadingShippingQuotes(true);
+      const userId = auth.currentUser?.uid;
+      try {
+        if (!userId || !checkoutState?.selectedAddressId) return;
+        const snapshot = await getDocs(query(collection(db, 'addresses'), where('userId', '==', userId)));
+        const addressDocument = snapshot.docs.find((document) => document.id === checkoutState.selectedAddressId);
+        if (!addressDocument) return;
+        const postalCode = addressDocument.data().postalCode;
+        const [estafeta, dhl] = await Promise.all([
+          getShippingDemoQuote({ carrierId: 'estafeta', postalCode }),
+          getShippingDemoQuote({ carrierId: 'dhl', postalCode }),
+        ]);
+        setShippingQuotes({ estafeta, dhl });
+      } finally {
+        setIsLoadingShippingQuotes(false);
+      }
+    };
+    loadShippingQuotes().catch((error) => console.error('Error al cotizar paqueterías demo:', error));
+  }, [checkoutState?.selectedAddressId]);
 
   const shippingCost = useMemo(
-    () => shippingOptions.find(({ id }) => id === selectedShipping)?.price || 0,
-    [selectedShipping],
+    () => shippingQuotes[selectedShipping]?.price || shippingOptions.find(({ id }) => id === selectedShipping)?.price || 0,
+    [selectedShipping, shippingQuotes],
   );
 
   const isPaymentValid = Boolean(selectedPaymentMethod);
@@ -79,6 +105,7 @@ const CheckoutShippingPayment = () => {
         selectedShipping,
         selectedPaymentMethod,
         coupon: appliedCoupon,
+        shippingQuote: shippingQuotes[selectedShipping] || null,
       },
     });
   };
@@ -114,7 +141,7 @@ const CheckoutShippingPayment = () => {
       <div className="space-y-7">
             <section>
               <div className="mb-4"><p className="text-[11px] font-bold uppercase tracking-[0.25em] text-emerald-500">Paso 1</p><h3 className="mt-1 text-xl font-black text-slate-900">Forma de envío</h3></div>
-              <ShippingOptions selectedShipping={selectedShipping} onShippingChange={setSelectedShipping} />
+              <ShippingOptions selectedShipping={selectedShipping} onShippingChange={setSelectedShipping} shippingQuotes={shippingQuotes} isLoading={isLoadingShippingQuotes} />
             </section>
             <section>
               <div className="mb-4"><p className="text-[11px] font-bold uppercase tracking-[0.25em] text-emerald-500">Paso 2</p><h3 className="mt-1 text-xl font-black text-slate-900">Forma de pago</h3></div>

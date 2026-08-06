@@ -26,6 +26,7 @@ const PaymentOptions = ({ selectedPaymentMethod, onPaymentMethodChange }) => (
         </div>
       );
     })}
+    <div className="flex items-center gap-3 rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-xs font-semibold leading-5 text-slate-500"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-sm text-emerald-600" aria-hidden="true">i</span><span>Puedes seleccionar cualquier método. Todos están habilitados únicamente para demostración y no realizan cobros reales.</span></div>
   </div>
 );
 

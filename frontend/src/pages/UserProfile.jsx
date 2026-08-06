@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { arrayRemove, collection, documentId, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
+import { useEffect, useMemo, useState } from 'react';
+import { arrayRemove, collection, documentId, doc, getDoc, getDocs, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
 import { CloseIcon as X, ConfigIcon, DeleteIcon as Trash2, FavoriteIcon as Heart, OrderIcon, RatingIcon as Star, ReviewIcon as MessageSquare } from '../components/icons/AppIcons';
 import { Link, useNavigate } from 'react-router-dom';
 import OrderHistoryCard from '../components/Profile/OrderHistoryCard';
@@ -7,6 +7,7 @@ import FavoriteButton from '../components/FavoriteButton';
 import { auth, db } from '../firebaseConfig';
 import { useFavorites } from '../hooks/useFavorites';
 import { useCart } from '../context/CartContext';
+import MonthYearPicker from '../components/MonthYearPicker';
 
 const chunk = (values, size) => Array.from({ length: Math.ceil(values.length / size) }, (_, index) => values.slice(index * size, index * size + size));
 
@@ -41,6 +42,7 @@ const UserProfile = ({ initialTab = 'orders' }) => {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const [orders, setOrders] = useState([]);
+  const [ordersPeriod, setOrdersPeriod] = useState('');
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [configurations, setConfigurations] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -76,18 +78,19 @@ const UserProfile = ({ initialTab = 'orders' }) => {
 
   useEffect(() => {
     if (activeTab !== 'orders') return;
-    const loadOrders = async () => {
-      const userId = auth.currentUser?.uid;
-      if (!userId) { setIsLoadingOrders(false); return; }
-      try {
-        const snapshot = await getDocs(query(collection(db, 'orders'), where('userId', '==', userId)));
-        const loadedOrders = snapshot.docs.map((document) => ({ id: document.id, ...document.data() }));
-        loadedOrders.sort((a, b) => (b.createdAt?.toMillis?.() || new Date(b.createdAt || 0).getTime()) - (a.createdAt?.toMillis?.() || new Date(a.createdAt || 0).getTime()));
-        setOrders(loadedOrders);
-      } catch (loadError) { console.error('Error al cargar el historial:', loadError); setError('No fue posible cargar tus compras. Intenta nuevamente.'); }
-      finally { setIsLoadingOrders(false); }
-    };
-    loadOrders();
+    const userId = auth.currentUser?.uid;
+    if (!userId) { setIsLoadingOrders(false); return undefined; }
+    const unsubscribe = onSnapshot(query(collection(db, 'orders'), where('userId', '==', userId)), (snapshot) => {
+      const loadedOrders = snapshot.docs.map((document) => ({ id: document.id, ...document.data() }));
+      loadedOrders.sort((a, b) => (b.createdAt?.toMillis?.() || new Date(b.createdAt || 0).getTime()) - (a.createdAt?.toMillis?.() || new Date(a.createdAt || 0).getTime()));
+      setOrders(loadedOrders);
+      setIsLoadingOrders(false);
+    }, (loadError) => {
+      console.error('Error al cargar el historial:', loadError);
+      setError('No fue posible cargar tus compras. Intenta nuevamente.');
+      setIsLoadingOrders(false);
+    });
+    return unsubscribe;
   }, [activeTab]);
 
   useEffect(() => {
@@ -136,11 +139,20 @@ const UserProfile = ({ initialTab = 'orders' }) => {
   }, [activeTab]);
 
   const favoritesLoading = isLoadingFavorites || isLoadingFavoriteIds;
+  const filteredOrders = useMemo(() => {
+    if (!ordersPeriod) return orders;
+    const [year, month] = ordersPeriod.split('-').map(Number);
+    return orders.filter((order) => {
+      const value = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt || 0);
+      return !Number.isNaN(value.getTime()) && value.getFullYear() === year && value.getMonth() + 1 === month;
+    });
+  }, [orders, ordersPeriod]);
   return <section className="w-full font-['Montserrat']"><div className="overflow-visible rounded-[32px] border border-slate-200/70 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]"><div className="border-b border-slate-100 bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(255,255,255,0.98))] px-6 py-6 sm:px-8"><p className="text-[11px] font-bold uppercase tracking-[0.34em] text-emerald-500">Mi cuenta</p><h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{activeTab === 'favorites' ? 'Mis favoritos' : activeTab === 'configurations' ? 'Mis PCs configuradas' : activeTab === 'reviews' ? 'Mis opiniones' : 'Mis compras'}</h1><p className="mt-1 text-sm font-medium text-slate-500">{activeTab === 'favorites' ? 'Guarda los componentes que quieres revisar después.' : activeTab === 'configurations' ? 'Consulta las configuraciones que guardaste desde el PC Builder.' : activeTab === 'reviews' ? 'Opiniones que has compartido sobre tus compras.' : 'Consulta tus pedidos y descarga nuevamente tus comprobantes.'}</p></div><div className="p-4 sm:p-6 lg:p-8">
+    {activeTab === 'orders' && <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Filtrar compras</p><p className="mt-1 text-xs font-semibold text-slate-400">Selecciona un mes y año</p></div><div className="flex items-center gap-2"><MonthYearPicker value={ordersPeriod} onChange={setOrdersPeriod} ariaLabel="Filtrar compras por mes y año" />{ordersPeriod && <button type="button" onClick={() => setOrdersPeriod('')} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600 transition hover:border-emerald-300 hover:text-emerald-600">Ver todas</button>}</div></div>}
     {activeTab === 'orders' && isLoadingOrders && <div className="grid gap-4 md:grid-cols-2"><div className="h-40 animate-pulse rounded-[24px] bg-slate-100" /><div className="h-40 animate-pulse rounded-[24px] bg-slate-100" /></div>}
     {activeTab === 'orders' && !isLoadingOrders && error && <div className="rounded-[24px] bg-rose-50 p-6 text-center text-sm font-bold text-rose-700">{error}</div>}
-    {activeTab === 'orders' && !isLoadingOrders && !error && orders.length > 0 && <div className="grid gap-4 md:grid-cols-2">{orders.map((order) => <OrderHistoryCard key={order.id} order={order} />)}</div>}
-    {activeTab === 'orders' && !isLoadingOrders && !error && orders.length === 0 && <EmptyState icon={OrderIcon} title="Aún no tienes compras" message="Cuando completes tu primer pedido aparecerá aquí junto con su comprobante." />}
+    {activeTab === 'orders' && !isLoadingOrders && !error && filteredOrders.length > 0 && <div className="grid items-start gap-4 md:grid-cols-2">{filteredOrders.map((order) => <OrderHistoryCard key={order.id} order={order} />)}</div>}
+    {activeTab === 'orders' && !isLoadingOrders && !error && filteredOrders.length === 0 && <EmptyState icon={OrderIcon} title={ordersPeriod ? 'No hay compras en este periodo' : 'Aún no tienes compras'} message={ordersPeriod ? 'Prueba seleccionando otro mes o pulsa “Ver todas”.' : 'Cuando completes tu primer pedido aparecerá aquí junto con su comprobante.'} />}
     {activeTab === 'favorites' && favoritesLoading && <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"><div className="h-80 animate-pulse rounded-[24px] bg-slate-100" /><div className="h-80 animate-pulse rounded-[24px] bg-slate-100" /></div>}
     {activeTab === 'favorites' && !favoritesLoading && error && <div className="rounded-[24px] bg-rose-50 p-6 text-center text-sm font-bold text-rose-700">{error}</div>}
     {activeTab === 'favorites' && !favoritesLoading && !error && favoriteProducts.length > 0 && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{favoriteProducts.map((product) => <FavoriteCard key={product.id} product={product} />)}</div>}

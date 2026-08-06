@@ -1,14 +1,15 @@
-import React from "react";
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import FavoriteButton from '../FavoriteButton';
-import { canAddToCart, getLocalStock } from '../AdminInventory/inventory';
+import { canAddToCart, getLocalStock, isDistributorIntegrated } from '../AdminInventory/inventory';
 import { EditIcon } from '../icons/AppIcons';
+import NormalizedProductImage, { getProductImageScale } from './NormalizedProductImage';
 
 const ProductCard = ({ product, isAdmin, onEditProduct }) => {
   const { addItem } = useCart();
   const navigate = useNavigate();
   const stock = getLocalStock(product);
+  const hasDistributorStock = isDistributorIntegrated(product);
   const rating = Math.max(0, Math.min(5, Number(product.rating) || 0));
   const filledStars = Math.round(rating);
 
@@ -40,10 +41,11 @@ const ProductCard = ({ product, isAdmin, onEditProduct }) => {
 
       <div className="relative z-10">
         <div className="w-full aspect-square bg-slate-50 overflow-hidden rounded-[24px] mb-4 border border-slate-50">
-          <img
+            <NormalizedProductImage
             src={product.images?.[0] || product.image || "https://via.placeholder.com/300?text=Hardware"}
             alt={product.name}
-            className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+            visualScale={getProductImageScale(product)}
+            className="h-full w-full object-contain p-3 transition-transform duration-500"
           />
         </div>
 
@@ -58,8 +60,8 @@ const ProductCard = ({ product, isAdmin, onEditProduct }) => {
         <p className="text-xs font-medium text-slate-400 capitalize mb-4">
           {product.category}
         </p>
-        <p className={`mb-2 text-[10px] font-black ${stock > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-          {stock > 0 ? `${stock} en stock` : 'Agotado'}
+        <p className={`mb-2 text-[10px] font-black ${stock > 0 ? 'text-emerald-600' : hasDistributorStock ? 'text-amber-600' : 'text-rose-500'}`}>
+          {stock > 0 ? `${stock} en stock` : hasDistributorStock ? 'Disponible bajo pedido' : 'Agotado'}
         </p>
         <div className="mb-2 flex items-center gap-2" aria-label={`Calificación: ${rating.toFixed(1)} de 5 estrellas`}>
           <span className="flex text-sm tracking-widest" aria-hidden="true">{[1, 2, 3, 4, 5].map((star) => <span key={star} className={star <= filledStars ? 'text-amber-400' : 'text-slate-200'}>{star <= filledStars ? '★' : '☆'}</span>)}</span>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { BackIcon, ShareIcon } from '../icons/AppIcons';
 import FavoriteButton from '../FavoriteButton';
 import StockNotice from '../AdminInventory/StockNotice';
-import { canAddToCart, getLocalStock, getMaxQuantity } from '../AdminInventory/inventory';
+import { canAddToCart, getLocalStock, getMaxQuantity, isDistributorIntegrated } from '../AdminInventory/inventory';
 
 const formatPrice = (value) => new Intl.NumberFormat('es-MX', {
   style: 'currency',
@@ -15,9 +15,11 @@ const ProductHero = ({ product, onAddToCart, onBack }) => {
   const specs = Object.entries(product.keySpecs || {});
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [shareMessage, setShareMessage] = useState('');
   const displayRating = Number(product.rating) || 0;
   const displayReviewsCount = Number(product.reviewsCount) || 0;
   const stock = getLocalStock(product);
+  const hasDistributorStock = isDistributorIntegrated(product);
 
   useEffect(() => {
     setActiveImage(0);
@@ -27,6 +29,19 @@ const ProductHero = ({ product, onAddToCart, onBack }) => {
 
   const maxQuantity = getMaxQuantity(product);
   const canPurchase = canAddToCart(product);
+  const handleShare = async () => {
+    const shareData = { title: product.name, text: `Mira este producto en FIRSTPC: ${product.name}`, url: window.location.href };
+    try {
+      if (navigator.share) await navigator.share(shareData);
+      else {
+        await navigator.clipboard.writeText(shareData.url);
+        setShareMessage('Enlace copiado');
+        window.setTimeout(() => setShareMessage(''), 2200);
+      }
+    } catch (shareError) {
+      if (shareError?.name !== 'AbortError') setShareMessage('No se pudo compartir');
+    }
+  };
   const showValue = (value) => typeof value === 'boolean'
     ? (value ? '✓ Sí' : '✗ No')
     : String(value);
@@ -46,7 +61,8 @@ const ProductHero = ({ product, onAddToCart, onBack }) => {
           <div className="absolute left-5 top-5 rounded-2xl bg-white/90 px-4 py-2 text-sm font-black text-slate-800 shadow-sm">{product.brand}</div>
           <div className="absolute right-5 top-5 flex gap-2">
             <FavoriteButton productId={product.id} />
-            <button type="button" onClick={() => navigator.clipboard?.writeText(window.location.href)} className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:text-emerald-500" aria-label="Compartir producto"><ShareIcon size={17} /></button>
+            <button type="button" onClick={handleShare} className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:text-emerald-500" aria-label="Compartir producto" title="Compartir producto"><ShareIcon size={17} /></button>
+            {shareMessage && <span role="status" className="absolute right-0 top-14 whitespace-nowrap rounded-full bg-slate-900 px-3 py-2 text-[10px] font-black text-white shadow-lg">{shareMessage}</span>}
           </div>
         </div>
         <div className="mt-4 flex gap-3 overflow-x-auto">
@@ -67,8 +83,8 @@ const ProductHero = ({ product, onAddToCart, onBack }) => {
         <div className="rounded-[24px] bg-slate-50 p-6">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Precio FIRSTPC</p>
           <p className="mt-1 text-3xl font-black tracking-tight text-slate-900">{formatPrice(product.price)}</p>
-          <p className={`mt-3 text-sm font-black ${stock > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-            {stock > 0 ? `${stock} pieza${stock === 1 ? '' : 's'} disponibles en stock` : 'Agotado'}
+          <p className={`mt-3 text-sm font-black ${stock > 0 ? 'text-emerald-600' : hasDistributorStock ? 'text-amber-600' : 'text-rose-500'}`}>
+            {stock > 0 ? `${stock} pieza${stock === 1 ? '' : 's'} disponibles en stock` : hasDistributorStock ? 'Disponible bajo pedido' : 'Agotado'}
           </p>
           <div className="mt-4 space-y-2 text-sm font-semibold text-slate-600"><p><span className="mr-2 text-emerald-500">✓</span>Envío a todo México</p><p><span className="mr-2 text-emerald-500">✓</span>Recíbelo entre 3 a 10 días hábiles</p><p><span className="mr-2 text-emerald-500">✓</span>Paga con OXXO Pay, tarjeta de débito, crédito o PayPal</p></div>
         </div>

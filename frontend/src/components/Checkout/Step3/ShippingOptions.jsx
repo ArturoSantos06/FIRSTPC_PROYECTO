@@ -37,9 +37,10 @@ const getDeliveryDates = (startDays, endDays) => {
   return `${formatDate(start)} y ${formatDate(end)}`;
 };
 
-const ShippingOptions = ({ selectedShipping, onShippingChange }) => (
+const ShippingOptions = ({ selectedShipping, onShippingChange, shippingQuotes = {}, isLoading = false }) => (
   <div className="space-y-3">
-    {shippingOptions.map((option) => {
+    {isLoading && <div className="space-y-3" aria-live="polite"><div className="h-[88px] animate-pulse rounded-[24px] border border-slate-200 bg-slate-100" /><div className="h-[88px] animate-pulse rounded-[24px] border border-slate-200 bg-slate-100" /><p className="text-center text-xs font-bold text-slate-400">Calculando opciones de envío...</p></div>}
+    {!isLoading && shippingOptions.map((option) => {
       const isSelected = selectedShipping === option.id;
 
       return (
@@ -65,17 +66,19 @@ const ShippingOptions = ({ selectedShipping, onShippingChange }) => (
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-black text-slate-900">{option.name}</span>
             <span className="mt-1 block text-xs font-medium text-slate-500">
-              Recíbelo entre el {getDeliveryDates(option.startDays, option.endDays)}
+              Recíbelo entre el {shippingQuotes[option.id]
+                ? getDeliveryDates(shippingQuotes[option.id].estimatedDays.min, shippingQuotes[option.id].estimatedDays.max)
+                : getDeliveryDates(option.startDays, option.endDays)}
             </span>
           </span>
-          <span className="text-right text-sm font-black text-slate-900">{moneyFormatter.format(option.price)}</span>
+          <span className="text-right text-sm font-black text-slate-900">{moneyFormatter.format(shippingQuotes[option.id]?.price || option.price)}</span>
         </label>
       );
     })}
-    <div className="flex items-center gap-3 rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-500">
+    {!isLoading && <div className="flex items-center gap-3 rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-500">
       <span className="text-lg" aria-hidden="true">🛡️</span>
       <span>Tu envío está asegurado y cuenta con rastreo en línea.</span>
-    </div>
+    </div>}
   </div>
 );
 

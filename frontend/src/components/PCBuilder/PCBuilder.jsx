@@ -155,7 +155,7 @@ export default function PCBuilder() {
     const components = Object.fromEntries(recommendationProducts
       .filter((entry) => entry?.key && entry.product)
       .map((entry) => [entry.key, entry.product]));
-    if (Object.keys(components).length) loadConfiguration(components, 1);
+    if (Object.keys(components).length) loadConfiguration(components, 12);
     navigate(location.pathname, { replace: true, state: {} });
     return undefined;
   }, [location.pathname, location.state?.recommendation?.products, loadConfiguration, navigate]);

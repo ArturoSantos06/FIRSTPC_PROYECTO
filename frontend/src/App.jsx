@@ -1,6 +1,6 @@
 import { useContext, useEffect } from 'react';
 import './index.css';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Home from './pages/Home';
 import LoginModal from './components/LoginModal';
 import CheckoutAddress from './pages/CheckoutAddress';
@@ -121,7 +121,7 @@ function App() {
                 </div>
                 <Footer />
               </div>
-            ) : <Navigate to="/login" replace />
+          ) : <CheckoutLoginGate redirectTo="/checkout/direccion" />
           }
         />
 
@@ -136,7 +136,7 @@ function App() {
                 </div>
                 <Footer />
               </div>
-            ) : <Navigate to="/login" replace />
+          ) : <CheckoutLoginGate redirectTo="/checkout/envio-pago" />
           }
         />
 
@@ -151,7 +151,7 @@ function App() {
                 </div>
                 <Footer />
               </div>
-            ) : <Navigate to="/login" replace />
+          ) : <CheckoutLoginGate redirectTo="/checkout/confirmacion" />
           }
         />
 
@@ -275,6 +275,25 @@ const ScrollToTop = () => {
 const LoginRedirect = () => {
   const location = useLocation();
   return <Navigate to={location.state?.from || '/'} replace />;
+};
+
+const CheckoutLoginGate = ({ redirectTo }) => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-10 md:px-6 lg:px-10">
+      <Navbar />
+      <div className="mx-auto w-full max-w-7xl">
+        <CheckoutCart />
+      </div>
+      <Footer />
+      <LoginModal
+        isOpen
+        redirectTo={redirectTo}
+        onClose={() => navigate('/carrito', { replace: true })}
+      />
+    </div>
+  );
 };
 
 export default App;

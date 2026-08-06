@@ -1,22 +1,10 @@
 import { CategoryIcon } from '../../icons/AppIcons';
+import { DEFAULT_CATEGORIES } from '../../../services/categoryService';
 
 export const renderCategoryIcon = (icon) => <CategoryIcon icon={icon} />;
 
-export const CATEGORIES = [
-  { id: 'procesadores', label: 'Procesadores', icon: 'CPU' },
-  { id: 'tarjetas-de-video', label: 'Tarjetas de Video', icon: 'GPU' },
-  { id: 'tarjetas-madre', label: 'Tarjetas Madre', icon: 'MB' },
-  { id: 'gabinetes', label: 'Gabinetes', icon: 'CASE' },
-  { id: 'enfriamiento', label: 'Enfriamiento', icon: 'COOL' },
-  { id: 'memorias-ram', label: 'Memorias RAM', icon: 'RAM' },
-  { id: 'almacenamiento', label: 'Almacenamiento', icon: 'SSD' },
-  { id: 'fuentes-de-poder', label: 'Fuentes de Poder', icon: 'PSU' },
-  { id: 'monitores', label: 'Monitores', icon: 'MON' },
-  { id: 'computadora', label: 'Computadoras', icon: 'PC' },
-  { id: 'teclados', label: 'Teclados', icon: 'KEYBOARD' },
-  { id: 'mouses', label: 'Mouses', icon: 'MOUSE' },
-  { id: 'audifonos-gaming', label: 'Audífonos Gaming', icon: 'AUX' },
-];
+const CATEGORY_ICONS = { procesadores: 'CPU', 'tarjetas-de-video': 'GPU', 'tarjetas-madre': 'MB', gabinetes: 'CASE', enfriamiento: 'COOL', 'memorias-ram': 'RAM', almacenamiento: 'SSD', 'fuentes-de-poder': 'PSU', monitores: 'MON', computadora: 'PC', teclados: 'KEYBOARD', mouses: 'MOUSE', 'audifonos-gaming': 'AUX' };
+export const CATEGORIES = DEFAULT_CATEGORIES.map(({ slug, name }) => ({ id: slug, label: name, icon: CATEGORY_ICONS[slug] || 'AUX' }));
 
 export const TRENDING_BRANDS = ['ASUS', 'AMD', 'Intel', 'Corsair', 'MSI', 'NVIDIA', 'Gigabyte', 'Logitech', 'Razer', 'HyperX'];
 
