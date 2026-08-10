@@ -1,0 +1,12 @@
+export const initialAddressForm = {
+  firstName: '', lastName: '', phone: '', gender: '', street: '', exteriorNumber: '',
+  interiorNumber: '', neighborhood: '', postalCode: '', city: '', state: '', references: '',
+};
+
+export const mexicanStates = [
+  'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche', 'Chiapas', 'Chihuahua',
+  'Ciudad de México', 'Coahuila', 'Colima', 'Durango', 'Estado de México', 'Guanajuato',
+  'Guerrero', 'Hidalgo', 'Jalisco', 'Michoacán', 'Morelos', 'Nayarit', 'Nuevo León', 'Oaxaca',
+  'Puebla', 'Querétaro', 'Quintana Roo', 'San Luis Potosí', 'Sinaloa', 'Sonora', 'Tabasco',
+  'Tamaulipas', 'Tlaxcala', 'Veracruz', 'Yucatán', 'Zacatecas',
+];

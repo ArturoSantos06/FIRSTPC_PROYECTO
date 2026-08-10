@@ -1,0 +1,93 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{userId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == userId;
+
+      match /reviews/{reviewId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false;
+      }
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if true;
+
+      match /ratings/{ratingUserId} {
+        allow read: if true;
+        allow write: if false;
+      }
+
+      match /reviews/{reviewUserId} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /addresses/{addressId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if request.auth != null
+        && (isAdmin() || resource.data.userId == request.auth.uid);
+    }
+
+    match /billing_profiles/{profileId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if request.auth != null
+        && (isAdmin() || resource.data.userId == request.auth.uid);
+    }
+
+    match /orders/{orderId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow get, list: if isAdmin()
+        || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow update: if isAdmin()
+        || (request.auth != null
+          && resource.data.userId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'hasActiveRma', 'rmaStatus', 'rmaTicket', 'rmaFolio', 'rmaCreatedAt'
+          ])
+          && resource.data.hasActiveRma != true
+          && request.resource.data.hasActiveRma == true
+          && request.resource.data.rmaStatus == 'PENDING');
+      allow delete: if false;
+    }
+
+    match /serviceRequests/{requestId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if isAdmin()
+        || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /welcomeCoupons/{userId} {
+      allow read: if request.auth != null
+        && request.auth.uid == userId;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && resource.data.userId == request.auth.uid
+        && resource.data.status == 'active'
+        && request.resource.data.status == 'used';
+    }
+  }
+}

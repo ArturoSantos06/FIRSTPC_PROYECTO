@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# Variables de entorno adicionales
+.env
+.env.production
+.env.development
+
+bulkUpload.js
+productos.json
