@@ -210,7 +210,7 @@ function App() {
         />
 
         <Route
-          path="/perfil/facturacion"
+          path="/perfil/datos-pago"
           element={
             user ? (
               <div className="min-h-screen bg-[#F8FAFC]/50 pt-28 px-4 pb-0 md:px-6 lg:px-10">

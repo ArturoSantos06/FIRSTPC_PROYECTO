@@ -25,7 +25,7 @@ const loadImageAsDataUrl = async (imageUrl) => {
   });
 };
 
-export const createReceiptPdf = async ({ order, address, billing, paymentName, shippingName, shippingCost, ivaAmount, orderTotal, download = true, pdfWindow = null }) => {
+export const createReceiptPdf = async ({ order, address, paymentName, shippingName, shippingCost, ivaAmount, orderTotal, download = true, pdfWindow = null }) => {
   const pdf = new jsPDF();
   pdf.setTextColor(15, 23, 42);
 
@@ -61,8 +61,7 @@ export const createReceiptPdf = async ({ order, address, billing, paymentName, s
   const addressLines = pdf.splitTextToSize(addressText, 165);
   pdf.text(addressLines, 20, y); y += Math.max(7, addressLines.length * 5 + 2);
   pdf.text(`Paquetería: ${shippingName}`, 20, y); y += 7;
-  pdf.text(`RFC: ${billing?.rfc || 'XAXX010101000'}`, 20, y);
-  y += 12;
+  y += 5;
   pdf.setFont('helvetica', 'bold'); pdf.text('Productos', 20, y); y += 8;
   pdf.setFont('helvetica', 'normal');
   order.products.forEach((product) => {
@@ -118,10 +117,10 @@ export const openReceiptPdf = async (options) => {
   }
 };
 
-const ReceiptPdf = ({ order, address, billing, paymentName, shippingName, shippingCost, ivaAmount, orderTotal }) => (
+const ReceiptPdf = ({ order, address, paymentName, shippingName, shippingCost, ivaAmount, orderTotal }) => (
   <button
     type="button"
-    onClick={() => createReceiptPdf({ order, address, billing, paymentName, shippingName, shippingCost, ivaAmount, orderTotal })}
+    onClick={() => createReceiptPdf({ order, address, paymentName, shippingName, shippingCost, ivaAmount, orderTotal })}
     className="mt-8 w-full rounded-full bg-[#10B981] px-5 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(16,185,129,0.24)] transition hover:-translate-y-0.5 hover:bg-emerald-600"
   >
     Descargar Comprobante en PDF

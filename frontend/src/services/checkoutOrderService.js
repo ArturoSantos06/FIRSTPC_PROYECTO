@@ -9,7 +9,6 @@ const getPurchasableItems = (cartItems) => cartItems.filter((item) => !item.id?.
 export const createCheckoutOrder = async ({
   cartItems,
   address,
-  billing,
   shipping,
   selectedPaymentMethod,
   totalAmount,
@@ -103,7 +102,6 @@ export const createCheckoutOrder = async ({
       distributorQuantity: fulfillmentByProduct.get(id)?.distributorQuantity || 0,
     })),
     shipping: { carrier: shipping.name, id: shipping.id, cost: shippingCost, address, shipment: demoShipment },
-    billing: billing || { note: 'Factura de público general con RFC genérico' },
     paymentMethod: selectedPaymentMethod,
     oxxoReference,
     subtotal: totalAmount,

@@ -4,11 +4,9 @@ import CheckoutLayout from '../components/Checkout/common/CheckoutLayout';
 import OrderSummary from '../components/Checkout/common/OrderSummary';
 import AddressCard from '../components/Checkout/Step2/AddressCard';
 import AddressForm from '../components/Checkout/Step2/AddressForm';
-import BillingSection from '../components/Checkout/Step2/BillingSection';
-import BillingModal from '../components/Checkout/Step2/BillingModal';
 import SuccessModal from '../components/Checkout/Step2/SuccessModal';
 import { useCart } from '../context/CartContext';
-import { addDoc, collection, deleteDoc, doc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
 import { initialAddressForm, mexicanStates } from '../data/addressData';
 
@@ -28,8 +26,6 @@ const CheckoutAddress = () => {
   const [addressToDelete, setAddressToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
-  const [billingData, setBillingData] = useState(null);
-  const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
 
   useEffect(() => {
     const loadSavedAddresses = async () => {
@@ -50,27 +46,6 @@ const CheckoutAddress = () => {
     loadSavedAddresses();
   }, []);
 
-  useEffect(() => {
-    const loadBillingProfile = async () => {
-      const userId = auth.currentUser?.uid;
-      if (!userId) return;
-      try {
-        const billingSnapshot = await getDocs(query(
-          collection(db, 'billing_profiles'),
-          where('userId', '==', userId),
-        ));
-        if (!billingSnapshot.empty) {
-          const billingDocument = billingSnapshot.docs[0];
-          setBillingData({ id: billingDocument.id, ...billingDocument.data() });
-        } else {
-          setBillingData(null);
-        }
-      } catch (error) {
-        console.error('Error al cargar el perfil de facturación:', error);
-      }
-    };
-    loadBillingProfile();
-  }, []);
 
   const handleChange = (event) => setAddressForm((current) => ({ ...current, [event.target.name]: event.target.value }));
   const setGender = (gender) => setAddressForm((current) => ({ ...current, gender }));
@@ -125,14 +100,6 @@ const CheckoutAddress = () => {
     }
   };
 
-  const handleSaveBilling = async (billingForm) => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) throw new Error('No hay una sesión activa.');
-    const billingProfile = { ...billingForm, userId, updatedAt: serverTimestamp() };
-    const profileId = billingData?.id || userId;
-    await setDoc(doc(db, 'billing_profiles', profileId), billingProfile, { merge: true });
-    setBillingData({ ...billingForm, userId, id: profileId });
-  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -173,7 +140,6 @@ const CheckoutAddress = () => {
       description="Elige una dirección guardada o agrega una nueva."
       summary={(
         <OrderSummary totalItems={totalItems} uniqueProducts={cartItems.length} totalAmount={totalAmount} buttonText="Ir al siguiente paso" onButtonClick={() => navigate('/checkout/envio-pago', { state: { selectedAddressId } })} isButtonDisabled={!selectedAddressId}>
-          <BillingSection billingData={billingData} onOpenBillingModal={() => setIsBillingModalOpen(true)} />
         </OrderSummary>
       )}
     >
@@ -202,7 +168,6 @@ const CheckoutAddress = () => {
         onContinue={confirmDeleteAddress}
         onCancel={() => { if (!isDeleting) setAddressToDelete(null); }}
       />
-      <BillingModal isOpen={isBillingModalOpen} onClose={() => setIsBillingModalOpen(false)} initialData={billingData} onSave={handleSaveBilling} />
     </>
   );
 };

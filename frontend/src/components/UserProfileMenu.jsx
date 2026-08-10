@@ -5,7 +5,7 @@ const menuItems = [
   'Mis compras',
   'Mis favoritos',
   'Mis datos de envío',
-  'Datos de pago y facturación',
+  'Datos de pago',
   'Mis opiniones',
   'Mis PCs configuradas',
 ];
@@ -96,7 +96,7 @@ const UserProfileMenu = ({ user, onSignOut }) => {
                   if (item === 'Mis compras') navigate('/perfil/compras');
                   if (item === 'Mis favoritos') navigate('/perfil/favoritos');
                   if (item === 'Mis datos de envío') navigate('/perfil/envio');
-                  if (item === 'Datos de pago y facturación') navigate('/perfil/facturacion');
+                  if (item === 'Datos de pago') navigate('/perfil/datos-pago');
                   if (item === 'Mis opiniones') navigate('/perfil/opiniones');
                   if (item === 'Mis PCs configuradas') navigate('/perfil/pc-configuradas');
                 }}

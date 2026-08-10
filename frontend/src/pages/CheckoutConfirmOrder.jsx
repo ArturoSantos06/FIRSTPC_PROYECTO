@@ -17,7 +17,6 @@ const CheckoutConfirmOrder = () => {
   const { state } = useLocation();
   const { cartItems, totalItems, totalAmount, clearCart } = useCart();
   const [address, setAddress] = useState(null);
-  const [billing, setBilling] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
@@ -42,13 +41,9 @@ const CheckoutConfirmOrder = () => {
       if (!userId) { setIsLoading(false); return; }
 
       try {
-        const [addressesSnapshot, billingSnapshot] = await Promise.all([
-          getDocs(query(collection(db, 'addresses'), where('userId', '==', userId))),
-          getDocs(query(collection(db, 'billing_profiles'), where('userId', '==', userId))),
-        ]);
+        const addressesSnapshot = await getDocs(query(collection(db, 'addresses'), where('userId', '==', userId)));
         const selectedAddress = addressesSnapshot.docs.find((document) => document.id === state?.selectedAddressId) || addressesSnapshot.docs[0];
         setAddress(selectedAddress ? { id: selectedAddress.id, ...selectedAddress.data() } : null);
-        setBilling(billingSnapshot.docs[0]?.data() || null);
       } catch (loadError) {
         console.error('Error al cargar los datos del checkout:', loadError);
         setError('No fue posible cargar la información del pedido.');
@@ -70,7 +65,6 @@ const CheckoutConfirmOrder = () => {
       const createdOrder = await createCheckoutOrder({
         cartItems,
         address,
-        billing,
         shipping,
         selectedPaymentMethod,
         totalAmount,
@@ -127,7 +121,6 @@ const CheckoutConfirmOrder = () => {
     >
       <ConfirmOrderView
         address={address}
-        billing={billing}
         cartItems={cartItems}
         error={error}
         isLoading={isLoading}
