@@ -45,7 +45,7 @@ const CheckoutCart = ({ className = '' }) => {
             <p className="mx-auto mt-2 max-w-md text-sm font-medium text-slate-500">Agrega productos desde el catálogo para comenzar a construir la compra.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-1 sm:gap-4">
             {itemDetails.map((item) => <CartItem key={item.id} item={item} onIncrement={handleIncrement} onDecrement={handleDecrement} onChangeQuantity={handleQuantityInput} onRemove={removeItem} />)}
           </div>
         )}

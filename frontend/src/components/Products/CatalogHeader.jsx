@@ -12,7 +12,7 @@ const ProductCatalogHeader = ({ resultsCount, isAdmin, onOpenAddProduct, onOpenF
             <button
               type="button"
               onClick={onOpenAddProduct}
-              className="rounded-full bg-slate-900 px-4 py-3 text-xs font-bold uppercase tracking-[0.28em] text-white shadow-[0_14px_28px_rgba(15,23,42,0.16)] transition hover:bg-emerald-500"
+              className="rounded-full bg-[#10B981] px-4 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-[0_14px_28px_rgba(16,185,129,0.24)] transition hover:bg-[#0ea472]"
             >
               + Añadir
             </button>
@@ -21,7 +21,7 @@ const ProductCatalogHeader = ({ resultsCount, isAdmin, onOpenAddProduct, onOpenF
           <button
             type="button"
             onClick={onOpenFilters}
-            className="rounded-full border border-emerald-200 bg-white px-4 py-3 text-xs font-bold uppercase tracking-[0.28em] text-emerald-700 shadow-[0_14px_28px_rgba(15,23,42,0.06)] transition hover:border-emerald-400"
+            className="rounded-full border border-emerald-200 bg-white px-4 py-3 text-xs font-bold uppercase tracking-[0.14em] text-emerald-700 shadow-[0_14px_28px_rgba(15,23,42,0.06)] transition hover:border-emerald-400"
           >
             Filtros
           </button>
@@ -37,7 +37,7 @@ const ProductCatalogHeader = ({ resultsCount, isAdmin, onOpenAddProduct, onOpenF
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="rounded-full border border-slate-200 bg-white px-4 py-3 text-xs font-bold uppercase tracking-[0.26em] text-slate-500 shadow-[0_14px_28px_rgba(15,23,42,0.06)]">
+            <div className="rounded-full border border-slate-200 bg-white px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-500 shadow-[0_14px_28px_rgba(15,23,42,0.06)]">
             {resultsCount} resultados
           </div>
 
@@ -45,7 +45,7 @@ const ProductCatalogHeader = ({ resultsCount, isAdmin, onOpenAddProduct, onOpenF
             <button
               type="button"
               onClick={onOpenAddProduct}
-              className="rounded-full bg-slate-900 px-5 py-3 text-xs font-bold uppercase tracking-[0.3em] text-white shadow-[0_16px_32px_rgba(15,23,42,0.16)] transition hover:bg-emerald-500"
+              className="rounded-full bg-[#10B981] px-5 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-[0_16px_32px_rgba(16,185,129,0.24)] transition hover:bg-[#0ea472]"
             >
               + Añadir Componente
             </button>

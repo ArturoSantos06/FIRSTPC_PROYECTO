@@ -74,6 +74,8 @@ const ProductCatalog = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 12;
 
   useEffect(() => {
     const unsubscribe = subscribeToCategories((items) => {
@@ -176,6 +178,17 @@ const ProductCatalog = () => {
     return filtered;
   }, [products, search, selectedCategory, selectedBrands, priceMin, priceMax, sortOrder]);
 
+  const pageCount = Math.max(1, Math.ceil(filteredProducts.length / productsPerPage));
+  const visiblePage = Math.min(currentPage, pageCount);
+  const paginatedProducts = filteredProducts.slice(
+    (visiblePage - 1) * productsPerPage,
+    visiblePage * productsPerPage,
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedCategory, selectedBrands, priceMin, priceMax, sortOrder]);
+
   const resetFilters = () => {
     setSearch("");
     setSelectedCategory([]);
@@ -268,17 +281,17 @@ const ProductCatalog = () => {
             categories={catalogCategories}
             availableBrands={availableBrands}
             search={search}
-            onSearchChange={setSearch}
+            onSearchChange={(value) => { setSearch(value); setCurrentPage(1); }}
             selectedCategory={selectedCategory}
             onCategoryChange={handleCategoryChange}
             selectedBrands={selectedBrands}
-            onToggleBrand={toggleBrand}
+            onToggleBrand={(brand) => { toggleBrand(brand); setCurrentPage(1); }}
             sortOrder={sortOrder}
-            onSortOrderChange={setSortOrder}
+            onSortOrderChange={(value) => { setSortOrder(value); setCurrentPage(1); }}
             priceMin={priceMin}
-            onPriceMinChange={setPriceMin}
+            onPriceMinChange={(value) => { setPriceMin(value); setCurrentPage(1); }}
             priceMax={priceMax}
-            onPriceMaxChange={setPriceMax}
+            onPriceMaxChange={(value) => { setPriceMax(value); setCurrentPage(1); }}
             onResetFilters={resetFilters}
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
@@ -297,11 +310,11 @@ const ProductCatalog = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 xl:grid-cols-3 2xl:grid-cols-4">
               {isLoadingProducts ? (
                 <Spinner label="Cargando componentes..." />
               ) : filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
+                paginatedProducts.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -313,6 +326,12 @@ const ProductCatalog = () => {
                 <ProductCatalogEmptyState onResetFilters={resetFilters} />
               )}
             </div>
+
+            {!isLoadingProducts && filteredProducts.length > productsPerPage && <nav className="mt-8 flex flex-wrap items-center justify-center gap-2" aria-label="Paginación del catálogo">
+              <button type="button" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={visiblePage === 1} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 transition hover:border-emerald-300 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-40">Anterior</button>
+              {Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => <button key={page} type="button" onClick={() => setCurrentPage(page)} aria-current={visiblePage === page ? 'page' : undefined} className={`h-9 min-w-9 rounded-full px-3 text-xs font-black transition ${visiblePage === page ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'border border-slate-200 bg-white text-slate-600 hover:border-emerald-300 hover:text-emerald-600'}`}>{page}</button>)}
+              <button type="button" onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))} disabled={visiblePage === pageCount} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 transition hover:border-emerald-300 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-40">Siguiente</button>
+            </nav>}
           </main>
         </div>
       </div>

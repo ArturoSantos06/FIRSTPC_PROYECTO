@@ -133,6 +133,6 @@ export function useRecommendationWizard() {
     window.dispatchEvent(new Event("firstpc-recommendations-updated"));
   };
   const loadRecommendation = (saved) => { setEquipment(saved.equipment); setUseCase(saved.useCase); setBudget(saved.budget); setResult(saved.result); setStep(4); };
-  const deleteRecommendation = (id) => { const next = savedRecommendations.filter((saved) => saved.id !== id); setSavedRecommendations(next); localStorage.setItem(SAVED_RECOMMENDATIONS_KEY, JSON.stringify(next)); window.dispatchEvent(new Event("firstpc-recommendations-updated")); };
+  const deleteRecommendation = (id, index) => { const next = savedRecommendations.filter((saved, savedIndex) => (id ? saved.id !== id : savedIndex !== index)); setSavedRecommendations(next); localStorage.setItem(SAVED_RECOMMENDATIONS_KEY, JSON.stringify(next)); window.dispatchEvent(new Event("firstpc-recommendations-updated")); };
   return { step, setStep, equipment, setEquipment, useCase, setUseCase, budget, setBudget, result, loading, error, runRecommendation, addRecommendation, reset, savedRecommendations, saveRecommendation, loadRecommendation, deleteRecommendation, navigate: navigateWithRecommendation };
 }

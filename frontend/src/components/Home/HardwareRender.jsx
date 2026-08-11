@@ -2,12 +2,12 @@ import React from 'react';
 
 const HardwareRender = () => {
   return (
-    <div className="relative w-full h-[500px] flex items-center justify-center group font-['Montserrat']">
-      <div className="absolute w-80 h-80 bg-[#A7F3D0]/30 rounded-full blur-[100px] animate-pulse" />
+    <div className="group relative flex h-[380px] w-full items-center justify-center font-['Montserrat'] sm:h-[500px]">
+      <div className="absolute h-64 w-64 animate-pulse rounded-full bg-[#A7F3D0]/30 blur-[80px] sm:h-80 sm:w-80 sm:blur-[100px]" />
 
       {/* LA PLACA BASE DE CRISTAL */}
       <div 
-        className="relative w-80 h-[390px] bg-white/60 backdrop-blur-xl rounded-[32px] border border-white/90 shadow-[0_20px_50px_rgba(100,116,139,0.05)] p-6 flex flex-col justify-between transform rotate-[-4deg] group-hover:rotate-0 group-hover:scale-[1.02] transition-all duration-500"
+        className="relative flex h-[300px] w-64 transform flex-col justify-between rounded-[28px] border border-white/90 bg-white/60 p-4 shadow-[0_20px_50px_rgba(100,116,139,0.05)] backdrop-blur-xl transition-all duration-500 rotate-[-4deg] group-hover:rotate-0 group-hover:scale-[1.02] sm:h-[390px] sm:w-80 sm:rounded-[32px] sm:p-6"
         style={{ animation: 'floating 5s infinite ease-in-out' }}
       >
         

@@ -10,7 +10,7 @@ const moneyFormatter = new Intl.NumberFormat('es-MX', {
 
 const CartItem = ({ item, onIncrement, onDecrement, onChangeQuantity, onRemove }) => {
   return (
-    <article className="grid gap-4 rounded-[28px] border border-slate-200/70 bg-slate-50/70 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.04)] transition hover:border-emerald-200/80 hover:bg-white sm:grid-cols-[120px_minmax(0,1fr)]">
+    <article className="grid min-w-0 gap-3 rounded-[28px] border border-slate-200/70 bg-slate-50/70 p-3 shadow-[0_12px_30px_rgba(15,23,42,0.04)] transition hover:border-emerald-200/80 hover:bg-white sm:gap-4 sm:p-4 sm:grid-cols-[120px_minmax(0,1fr)]">
       <div className="flex items-center justify-center overflow-hidden rounded-[24px] border border-slate-100 bg-white p-3 shadow-[0_10px_25px_rgba(15,23,42,0.06)] sm:h-full">
         <img
           src={item.images?.[0] || item.image || 'https://via.placeholder.com/300?text=FIRSTPC'}
@@ -23,15 +23,15 @@ const CartItem = ({ item, onIncrement, onDecrement, onChangeQuantity, onRemove }
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-slate-900 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.28em] text-white">
+              <span className="max-w-full truncate rounded-full bg-slate-900 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-white sm:px-3 sm:text-[10px] sm:tracking-[0.28em]">
                 {item.brand || 'FIRSTPC'}
               </span>
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald-700">
+              <span className="max-w-full truncate rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-emerald-700 sm:px-3 sm:text-[10px] sm:tracking-[0.28em]">
                 {item.category || 'Producto'}
               </span>
             </div>
 
-            <h3 className="mt-3 truncate text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+            <h3 className="mt-3 line-clamp-3 break-words text-sm font-black tracking-tight text-slate-900 sm:truncate sm:text-xl">
               {item.name}
             </h3>
             <p className="mt-1 text-sm font-medium text-slate-500">

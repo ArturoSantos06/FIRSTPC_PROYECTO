@@ -2,32 +2,32 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
-  const footerLinkClass = "text-sm font-medium text-slate-500 hover:text-[#10B981] transition-colors";
+  const footerLinkClass = "text-[13px] font-medium text-slate-500 hover:text-[#10B981] transition-colors sm:text-sm";
 
   return (
     <footer className="bg-slate-50 border-t border-slate-100 font-['Montserrat'] pt-10 pb-5">
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pb-8 border-b border-slate-200/60">
+        <div className="columns-2 gap-x-6 border-b border-slate-200/60 pb-8 md:columns-4 md:gap-6">
           
-          <div className="flex flex-col space-y-3">
+          <div className="mb-8 break-inside-avoid flex flex-col space-y-3">
             <h4 className="text-sm font-black text-slate-800 tracking-wider uppercase">Conócenos</h4>
             <Link to="/quienes-somos" className={footerLinkClass}>Quiénes somos</Link>
             <Link to="/formas-pago-envio" className={footerLinkClass}>Formas de pago y envío</Link>
           </div>
 
-          <div className="flex flex-col space-y-3">
+          <div className="mb-8 break-inside-avoid flex flex-col space-y-3">
             <h4 className="text-sm font-black text-slate-800 tracking-wider uppercase">Accesos Rápidos</h4>
             <Link to="/perfil/compras" className={footerLinkClass}>Historial de pedidos</Link>
             <Link to="/garantias" className={footerLinkClass}>Garantías y devoluciones</Link>
             <Link to="/catalogo" className={footerLinkClass}>Catálogo de componentes</Link>
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
               <Link to="/armar-pc" className={footerLinkClass}>Armar PC</Link>
               <Link to="/recomendador" className={footerLinkClass}>Recomendaciones</Link>
             </div>
           </div>
 
-          <div className="flex flex-col space-y-3">
+          <div className="mb-8 break-inside-avoid flex flex-col space-y-3">
             <h4 className="text-sm font-black text-slate-800 tracking-wider uppercase">¿Necesitas ayuda?</h4>
             <Link to="/como-comprar" className={footerLinkClass}>¿Cómo comprar?</Link>
             <Link to="/guia-pc-builder" className={footerLinkClass}>¿Cómo usar PC Builder?</Link>
@@ -35,7 +35,7 @@ const Footer = () => {
             <Link to="/faq" className={footerLinkClass}>Preguntas frecuentes</Link>
           </div>
 
-          <div className="flex flex-col space-y-3">
+          <div className="mb-8 break-inside-avoid flex flex-col space-y-3">
             <h4 className="text-sm font-black text-slate-800 tracking-wider uppercase">Contacto</h4>
             <p className="text-sm font-bold text-slate-700">Campeche: <a href="tel:+529811852169" className="font-medium text-slate-500 hover:text-[#10B981]">981 185 2169</a></p>
             <p className="text-xs font-semibold text-slate-400 pt-1">L-V 9:00AM - 6:00PM</p>

@@ -16,7 +16,7 @@ const RecommendationBanner = () => (
             Cuéntanos si buscas una laptop o una PC, para qué la necesitas y cuánto quieres invertir. Te mostraremos recomendaciones del catálogo FIRSTPC.
           </p>
         </div>
-        <Link to="/recomendador" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#10B981] px-6 py-3.5 text-sm font-black text-white shadow-[0_10px_25px_rgba(16,185,129,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#0ea472]">
+        <Link to="/recomendador" className="inline-flex shrink-0 self-center items-center gap-2 rounded-full bg-[#10B981] px-6 py-3.5 text-sm font-black text-white shadow-[0_10px_25px_rgba(16,185,129,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#0ea472] lg:self-auto">
           ¿Qué equipo necesito? <ArrowRight size={18} />
         </Link>
       </div>
